@@ -1,9 +1,8 @@
 ﻿using BepInEx;
-using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using MoreUpgrades.Classes;
-using Photon.Pun;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,18 +12,21 @@ using UnityEngine.SceneManagement;
 
 namespace MoreUpgrades
 {
-    [BepInDependency("REPOLib", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency(CustomColors.modGUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(Compatibility.REPOLib.modGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(Compatibility.CustomColors.modGUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(modGUID, modName, modVer)]
     internal class Plugin : BaseUnityPlugin
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.4.8";
+        private const string modVer = "1.5.0";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
         private readonly Harmony harmony = new Harmony(modGUID);
+
+        internal ConfigEntry<bool> importUpgrades;
+        internal ConfigEntry<string> excludeUpgradeIds;
 
         internal AssetBundle assetBundle;
         internal List<UpgradeItem> upgradeItems;
@@ -68,7 +70,7 @@ namespace MoreUpgrades
 
         internal void AddEnemyToMap(Component component, string enemyName = null)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.name == "Map Enemy Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Enemy Tracker");
             if (upgradeItem == null)
                 return;
             if (component is EnemyParent enemyParent && enemyName == null)
@@ -77,8 +79,8 @@ namespace MoreUpgrades
                 .Where(x => !string.IsNullOrEmpty(x)).Contains(enemyName))
                 return;
             GameObject visuals = GetVisualsFromComponent(component);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("AddToMap");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("RemoveFromMap");
+            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
+            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
             if (visuals == null || addToMap.Any(x => x.Item1 == visuals))
                 return;
             if (removeFromMap.Contains(visuals))
@@ -88,7 +90,7 @@ namespace MoreUpgrades
 
         internal void RemoveEnemyFromMap(Component component, string enemyName = null)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.name == "Map Enemy Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Enemy Tracker");
             if (upgradeItem == null)
                 return;
             if (component is EnemyParent enemyParent && enemyName == null)
@@ -97,8 +99,8 @@ namespace MoreUpgrades
                 .Where(x => !string.IsNullOrEmpty(x)).Contains(enemyName))
                 return;
             GameObject visuals = GetVisualsFromComponent(component);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("AddToMap");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("RemoveFromMap");
+            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
+            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
             if (visuals == null || removeFromMap.Contains(visuals))
                 return;
             if (addToMap.Any(x => x.Item1 == visuals))
@@ -108,12 +110,12 @@ namespace MoreUpgrades
 
         internal void AddPlayerToMap(PlayerAvatar playerAvatar)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.name == "Map Player Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Player Tracker");
             if (upgradeItem == null)
                 return;
             GameObject visuals = GetVisualsFromComponent(playerAvatar);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("AddToMap");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("RemoveFromMap");
+            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
+            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
             if (visuals == null || addToMap.Any(x => x.Item1 == visuals))
                 return;
             if (removeFromMap.Contains(visuals))
@@ -126,12 +128,12 @@ namespace MoreUpgrades
 
         internal void RemovePlayerToMap(PlayerAvatar playerAvatar)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.name == "Map Player Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Player Tracker");
             if (upgradeItem == null)
                 return;
             GameObject visuals = GetVisualsFromComponent(playerAvatar);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("AddToMap");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("RemoveFromMap");
+            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
+            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
             if (visuals == null || removeFromMap.Contains(visuals))
                 return;
             if (addToMap.Any(x => x.Item1 == visuals))
@@ -139,36 +141,20 @@ namespace MoreUpgrades
             removeFromMap.Add(visuals);
         }
 
-        internal static class CustomColors
-        {
-            internal const string modGUID = "x753.CustomColors";
-
-            internal static bool IsLoaded() => Chainloader.PluginInfos.ContainsKey(modGUID);
-
-            internal static void OnAwake() => instance.PatchAll("CustomColorsPatches");
-        }
-
-        internal static float ItemValueMultiplier(float itemValueMultiplier, string itemAssetName)
+        internal static float ItemValueMultiplier(float itemValueMultiplier, Item item)
         {
             if (MoreUpgradesManager.instance == null)
                 return itemValueMultiplier;
-            return instance.upgradeItems.FirstOrDefault(x => x.fullName == itemAssetName) != null ? 1 : itemValueMultiplier;
-        }
-
-        internal static float UpgradeValueIncrease(float upgradeValueIncrease, string itemAssetName)
-        {
-            if (MoreUpgradesManager.instance == null)
-                return upgradeValueIncrease;
-            UpgradeItem upgradeItem = instance.upgradeItems.FirstOrDefault(x => x.fullName == itemAssetName);
+            UpgradeItem upgradeItem = instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
             if (upgradeItem == null)
-                return upgradeValueIncrease;
-            float value = upgradeItem.HasConfig("Price Increase Scaling") ? upgradeItem.GetConfig<float>("Price Increase Scaling") :
-                upgradeItem.upgradeItemBase.priceIncreaseScaling;
+                return itemValueMultiplier;
+            float value = upgradeItem.HasConfig("Price Multiplier") ? upgradeItem.GetConfig<float>("Price Multiplier") :
+                itemValueMultiplier;
             if (value < 0)
-                value = upgradeValueIncrease;
+                value = itemValueMultiplier;
             return value;
         }
-
+        
         void Awake()
         {
             instance = this;
@@ -179,86 +165,109 @@ namespace MoreUpgrades
                 logger.LogError("Something went wrong when loading the asset bundle.");
                 return;
             }
+            importUpgrades = Config.Bind("! REPOLib Configuration !", "Import Upgrades", false, 
+                "Whether to import the upgrades from REPOLib.");
+            excludeUpgradeIds = Config.Bind("! REPOLib Configuration !", "Exclude Upgrade IDs", "",
+                "Exclude specific REPOLib upgrades by listing their IDs, seperated by commas." +
+                "\nThis setting only has an effect if 'Import Upgrades' is enabled.");
             upgradeItems = new List<UpgradeItem>();
-            UpgradeItem sprintUsage = new UpgradeItem(new UpgradeItemBase
+            UpgradeItemBase sprintUsageBase = new UpgradeItemBase
             {
                 name = "Sprint Usage",
                 maxAmount = 10,
                 maxAmountInShop = 2,
                 minPrice = 9000,
                 maxPrice = 14000
-            });
-            sprintUsage.AddConfig("Scaling Factor", 0.1f, "Formula: energySprintDrain / (1 + (upgradeAmount * scalingFactor))");
-            sprintUsage.onFixedUpdate += () =>
-            {
-                int amount = sprintUsage.GetAmount();
-                if (PlayerController.instance != null && amount != 0)
-                {
-                    if (!sprintUsage.HasVariable("OriginalEnergySprintDrain"))
-                        sprintUsage.AddVariable("OriginalEnergySprintDrain", PlayerController.instance.EnergySprintDrain);
-                    float originalEnergySprintDrain = sprintUsage.GetVariable<float>("OriginalEnergySprintDrain");
-                    PlayerController.instance.EnergySprintDrain = originalEnergySprintDrain / 
-                        (1f + (amount * sprintUsage.GetConfig<float>("Scaling Factor")));
-                }
             };
+            UpgradeItem sprintUsage = null;
+            void UpdateSprintUsage(PlayerAvatar playerAvatar, int level)
+            {
+                if (PlayerController.instance.playerAvatarScript != playerAvatar)
+                    return;
+                string key = "Energy Sprint Drain";
+                if (!sprintUsage.HasVariable(key))
+                    sprintUsage.AddVariable(key, PlayerController.instance.EnergySprintDrain);
+                PlayerController.instance.EnergySprintDrain =
+                    sprintUsage.GetVariable<float>(key) * Mathf.Pow(sprintUsage.GetConfig<float>("Scaling Factor"), level);
+            }
+            sprintUsageBase.onStart += UpdateSprintUsage;
+            sprintUsageBase.onUpgrade += UpdateSprintUsage;
+            sprintUsage = new UpgradeItem(sprintUsageBase);
+            sprintUsage.AddConfig("Scaling Factor", 0.9f,
+                "Formula: energySprintDrain * (scalingFactor ^ upgradeLevel))");
             upgradeItems.Add(sprintUsage);
-            UpgradeItem valuableCount = new UpgradeItem(new UpgradeItemBase 
+            UpgradeItemBase valuableCountBase = new UpgradeItemBase
             {
                 name = "Valuable Count",
                 minPrice = 30000,
                 maxPrice = 40000,
                 maxPurchaseAmount = 1,
                 priceIncreaseScaling = 0
-            });
-            valuableCount.AddConfig("Display Total Value", true, "Whether to display the total value next to the valuable counter.");
-            valuableCount.onInit += () =>
-            {
-                valuableCount.AddVariable("CurrentValuables", new List<ValuableObject>());
-                valuableCount.AddVariable("Changed", false);
-                valuableCount.AddVariable("PreviousCount", 0);
-                valuableCount.AddVariable("PreviousValue", 0);
-                valuableCount.AddVariable("TextLength", 0);
             };
-            valuableCount.onUpdate += () =>
+            UpgradeItem valuableCount = null;
+            valuableCountBase.onVariablesStart += delegate
+            {
+                valuableCount.AddVariable("Current Valuables", new List<ValuableObject>());
+                valuableCount.AddVariable("Changed", false);
+                valuableCount.AddVariable("Previous Count", 0);
+                valuableCount.AddVariable("Previous Value", 0);
+                valuableCount.AddVariable("Text Length", 0);
+            };
+            valuableCountBase.onUpdate += delegate
             {
                 if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop())
                     return;
-                if (MissionUI.instance != null && valuableCount.GetAmount() != 0)
+                PlayerAvatar localPlayerAvatar = SemiFunc.PlayerAvatarLocal();
+                if (localPlayerAvatar != null && MissionUI.instance != null
+                    && valuableCount.playerUpgrade.GetLevel(localPlayerAvatar) != 0)
                 {
-                    TextMeshProUGUI Text = (TextMeshProUGUI)AccessTools.Field(typeof(MissionUI), "Text").GetValue(MissionUI.instance);
-                    string messagePrev = (string)AccessTools.Field(typeof(MissionUI), "messagePrev").GetValue(MissionUI.instance);
-                    List<ValuableObject> currentValuables = valuableCount.GetVariable<List<ValuableObject>>("CurrentValuables");
+                    TextMeshProUGUI missionText = 
+                        (TextMeshProUGUI)AccessTools.Field(typeof(MissionUI), "Text").GetValue(MissionUI.instance);
+                    string messagePrev = 
+                        (string)AccessTools.Field(typeof(MissionUI), "messagePrev").GetValue(MissionUI.instance);
+                    List<ValuableObject> currentValuables = 
+                        valuableCount.GetVariable<List<ValuableObject>>("Current Valuables");
                     bool changed = valuableCount.GetVariable<bool>("Changed");
-                    int previousCount = valuableCount.GetVariable<int>("PreviousCount");
-                    int previousValue = valuableCount.GetVariable<int>("PreviousValue");
-                    int textLength = valuableCount.GetVariable<int>("TextLength");
+                    int previousCount = valuableCount.GetVariable<int>("Previous Count");
+                    int previousValue = valuableCount.GetVariable<int>("Previous Value");
+                    int textLength = valuableCount.GetVariable<int>("Text Length");
                     int count = currentValuables.Count;
                     bool displayTotalValue = valuableCount.GetConfig<bool>("Display Total Value");
-                    int value = displayTotalValue ? currentValuables.Select(x => (int)x.dollarValueCurrent).Sum() : 0;
-                    if (!Text.text.IsNullOrWhiteSpace() && (changed || previousCount != count || previousValue != value))
+                    int value = displayTotalValue ? currentValuables.Select(x =>
                     {
-                        string text = Text.text;
+                        return (int)((float)AccessTools.Field(typeof(ValuableObject), "dollarValueCurrent").GetValue(x));
+                    }).Sum() : 0;
+                    if (!missionText.text.IsNullOrWhiteSpace() && (changed || previousCount != count || previousValue != value))
+                    {
+                        string text = missionText.text;
                         if (!changed && (previousCount != count || previousValue != value))
                             text = text.Substring(0, text.Length - textLength);
                         string valuableText = $"\nValuables: <b>{count}</b>" +
-                            (displayTotalValue ? $" (<color=#558B2F>$</color><b>{SemiFunc.DollarGetString(value)}</b>)" : "");
+                            (displayTotalValue ? 
+                                $" (<color=#558B2F>$</color><b>{SemiFunc.DollarGetString(value)}</b>)" : "");
                         text += valuableText;
-                        valuableCount.SetVariable("PreviousCount", count);
-                        valuableCount.SetVariable("PreviousValue", value);
-                        valuableCount.SetVariable("TextLength", valuableText.Length);
-                        Text.text = text;
+                        valuableCount.SetVariable("Previous Count", count);
+                        valuableCount.SetVariable("Previous Value", value);
+                        valuableCount.SetVariable("Text Length", valuableText.Length);
+                        missionText.text = text;
                         AccessTools.Field(typeof(MissionUI), "messagePrev").SetValue(MissionUI.instance, text);
-                        if (changed) 
+                        if (changed)
                             valuableCount.SetVariable("Changed", false);
                     }
                 }
             };
+            valuableCount = new UpgradeItem(valuableCountBase);
+            valuableCount.AddConfig("Display Total Value", true, 
+                "Whether to display the total value next to the valuable counter.");
+            valuableCount.AddConfig("Ignore Money Bags", false,
+                "Whether to ignore the money bags from the extraction points.");
             upgradeItems.Add(valuableCount);
             void UpdateTracker(UpgradeItem upgradeItem)
             {
-                if (SemiFunc.PlayerAvatarLocal() != null && upgradeItem.GetAmount() != 0)
+                PlayerAvatar localPlayerAvatar = SemiFunc.PlayerAvatarLocal();
+                if (localPlayerAvatar != null && upgradeItem.playerUpgrade.GetLevel(localPlayerAvatar) != 0)
                 {
-                    List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("AddToMap");
+                    List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
                     for (int i = addToMap.Count - 1; i >= 0; i--)
                     {
                         (GameObject gameObject, Color color) = addToMap[i];
@@ -268,10 +277,11 @@ namespace MoreUpgrades
                             continue;
                         mapCustom = gameObject.AddComponent<MapCustom>();
                         mapCustom.color = color;
-                        mapCustom.sprite = upgradeItem.GetConfig<bool>("Arrow Icon") ? assetBundle.LoadAsset<Sprite>("Map Tracker") :
+                        mapCustom.sprite = upgradeItem.GetConfig<bool>("Arrow Icon") ? 
+                            assetBundle.LoadAsset<Sprite>("Map Tracker") :
                             SemiFunc.PlayerAvatarLocal().playerDeathHead.mapCustom.sprite;
                     }
-                    List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("RemoveFromMap");
+                    List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
                     for (int i = removeFromMap.Count - 1; i >= 0; i--)
                     {
                         GameObject gameObject = removeFromMap[i];
@@ -284,65 +294,89 @@ namespace MoreUpgrades
                     }
                 }
             };
-            UpgradeItem mapEnemyTracker = new UpgradeItem(new UpgradeItemBase
+            UpgradeItemBase mapEnemyTrackerBase = new UpgradeItemBase
             {
                 name = "Map Enemy Tracker",
                 minPrice = 50000,
                 maxPrice = 60000,
                 maxPurchaseAmount = 1,
                 priceIncreaseScaling = 0
-            });
-            mapEnemyTracker.AddConfig("Arrow Icon", true, "Whether the icon should appear as an arrow showing direction instead of a dot.");
-            mapEnemyTracker.AddConfig("Color", Color.red, "The color of the icon.");
-            mapEnemyTracker.AddConfig("Exclude Enemies", "", "Exclude specific enemies from displaying their icon by listing their names." +
-                "\nExample: 'Gnome, Clown', seperated by commas.");
-            mapEnemyTracker.onInit += () =>
-            {
-                mapEnemyTracker.AddVariable("AddToMap", new List<(GameObject, Color)>());
-                mapEnemyTracker.AddVariable("RemoveFromMap", new List<GameObject>());
             };
-            mapEnemyTracker.onUpdate += () =>
+            UpgradeItem mapEnemyTracker = null;
+            mapEnemyTrackerBase.onVariablesStart += delegate
+            {
+                mapEnemyTracker.AddVariable("Add To Map", new List<(GameObject, Color)>());
+                mapEnemyTracker.AddVariable("Remove From Map", new List<GameObject>());
+            };
+            mapEnemyTrackerBase.onUpdate += delegate
             {
                 if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop())
                     return;
                 UpdateTracker(mapEnemyTracker);
             };
+            mapEnemyTracker = new UpgradeItem(mapEnemyTrackerBase);
+            mapEnemyTracker.AddConfig("Arrow Icon", true, 
+                "Whether the icon should appear as an arrow showing direction instead of a dot.");
+            mapEnemyTracker.AddConfig("Color", Color.red, "The color of the icon.");
+            mapEnemyTracker.AddConfig("Exclude Enemies", "", 
+                "Exclude specific enemies from displaying their icon by listing their names." +
+                "\nExample: 'Gnome, Clown', seperated by commas.");
             upgradeItems.Add(mapEnemyTracker);
-            UpgradeItem mapPlayerTracker = new UpgradeItem(new UpgradeItemBase
+            UpgradeItemBase mapPlayerTrackerBase = new UpgradeItemBase
             {
                 name = "Map Player Tracker",
                 minPrice = 30000,
                 maxPrice = 40000,
                 maxPurchaseAmount = 1,
                 priceIncreaseScaling = 0
-            });
-            mapPlayerTracker.AddConfig("Arrow Icon", true, "Whether the icon should appear as an arrow showing direction instead of a dot.");
-            mapPlayerTracker.AddConfig("Player Color", false, "Whether the icon should be colored as the player.");
-            mapPlayerTracker.AddConfig("Color", Color.blue, "The color of the icon.");
-            mapPlayerTracker.onInit += () =>
-            {
-                mapPlayerTracker.AddVariable("AddToMap", new List<(GameObject, Color)>());
-                mapPlayerTracker.AddVariable("RemoveFromMap", new List<GameObject>());
             };
-            mapPlayerTracker.onUpdate += () =>
+            UpgradeItem mapPlayerTracker = null;
+            mapPlayerTrackerBase.onVariablesStart = delegate
+            {
+                mapPlayerTracker.AddVariable("Add To Map", new List<(GameObject, Color)>());
+                mapPlayerTracker.AddVariable("Remove From Map", new List<GameObject>());
+            };
+            mapPlayerTrackerBase.onUpdate += delegate
             {
                 UpdateTracker(mapPlayerTracker);
             };
+            mapPlayerTracker = new UpgradeItem(mapPlayerTrackerBase);
+            mapPlayerTracker.AddConfig("Arrow Icon", true, 
+                "Whether the icon should appear as an arrow showing direction instead of a dot.");
+            mapPlayerTracker.AddConfig("Player Color", false, "Whether the icon should be colored as the player.");
+            mapPlayerTracker.AddConfig("Color", Color.blue, "The color of the icon.");
             upgradeItems.Add(mapPlayerTracker);
+            UpgradeItemBase itemResistBase = new UpgradeItemBase
+            {
+                name = "Item Resist",
+                maxAmount = 10,
+                maxAmountInShop = 2,
+                minPrice = 4000,
+                maxPrice = 6000
+            };
+            UpgradeItem itemResist = null;
+            itemResistBase.onVariablesStart = delegate
+            {
+                itemResist.AddVariable("Last Player Grabbed", new Dictionary<PhysGrabObject, PlayerAvatar>());
+            };
+            itemResist = new UpgradeItem(itemResistBase);
+            itemResist.AddConfig("Scaling Factor", 0.9f,
+                "Formula: valueLost * (scalingFactor ^ upgradeLevel)");
+            upgradeItems.Add(itemResist);
             SceneManager.activeSceneChanged += delegate
             {
                 if (RunManager.instance == null || RunManager.instance.levelCurrent == RunManager.instance.levelMainMenu 
-                    || RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu)
+                    || RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu
+                    || RunManager.instance.levelCurrent == RunManager.instance.levelSplashScreen)
                     return;
                 GameObject manager = new GameObject("More Upgrades Manager");
-                PhotonView photonView = manager.AddComponent<PhotonView>();
-                photonView.ViewID = 1863;
                 manager.AddComponent<MoreUpgradesManager>();
             };
             logger.LogMessage($"{modName} has started.");
             PatchAll("Patches");
-            if (CustomColors.IsLoaded())
-                CustomColors.OnAwake();
+            PatchAll("REPOLibPatches");
+            if (Compatibility.CustomColors.IsLoaded())
+                PatchAll("CustomColorsPatches");
         }
     }
 }

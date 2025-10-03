@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MoreUpgrades.Classes
 {
@@ -11,6 +12,12 @@ namespace MoreUpgrades.Classes
         public float maxPrice = 1000;
         public int maxPurchaseAmount = 0;
         public float priceIncreaseScaling = -1f;
+        public Action<PlayerAvatar, int> onStart;
+        public Action<PlayerAvatar, int> onUpgrade;
+        public Action onVariablesStart;
+        public Action onUpdate;
+        public Action onLateUpdate;
+        public Action onFixedUpdate;
         public List<string> excludeConfigs = new List<string>();
     }
 }

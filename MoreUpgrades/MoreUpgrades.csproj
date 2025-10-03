@@ -96,14 +96,16 @@
     <Compile Include="Classes\MoreUpgradesManager.cs" />
     <Compile Include="Classes\UpgradeItem.cs" />
     <Compile Include="Classes\UpgradeItemBase.cs" />
+    <Compile Include="Compatibility\CustomColor.cs" />
+    <Compile Include="Compatibility\REPOLib.cs" />
     <Compile Include="CustomColorsPatches\ModdedColorPlayerAvatarPatch.cs" />
     <Compile Include="Patches\ItemAttributesPatch.cs" />
+    <Compile Include="Patches\PhysGrabObjectImpactDetectorPatch.cs" />
     <Compile Include="Patches\PlayerAvatarPatch.cs" />
     <Compile Include="Patches\EnemySlowMouthPatch.cs" />
     <Compile Include="Patches\EnemyParentPatch.cs" />
     <Compile Include="Patches\EnemyHealthPatch.cs" />
     <Compile Include="Patches\MissionUIPatch.cs" />
-    <Compile Include="Patches\StatsManagerPatch.cs" />
     <Compile Include="Patches\ValuableObjectPatch.cs" />
     <Compile Include="Patches\PhysGrabObjectPatch.cs" />
     <Compile Include="Patches\ItemUpgradePatch.cs" />
@@ -115,6 +117,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="REPOLibPatches\REPOLibItemUpgradePatch.cs" />
+    <Compile Include="REPOLibPatches\UpgradesPatch.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -124,13 +128,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\moreupgrades" />
-    <None Include="Upload\CHANGELOG.md" />
-    <None Include="Upload\manifest.json" />
-    <None Include="Upload\README.md" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /q/y/i "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\REPO\BepInEx\plugins" /E /H /C
-xcopy /q/y/i "$(TargetPath)" "C:\Users\BULLETBOT\source\repos\MoreUpgrades\MoreUpgrades\Upload" /E /H /C</PostBuildEvent>
+xcopy /q/y/i "$(TargetPath)" "C:\Users\BULLETBOT\Documents\GitHub\REPO-MoreUpgrades\Upload" /E /H /C</PostBuildEvent>
   </PropertyGroup>
 </Project>

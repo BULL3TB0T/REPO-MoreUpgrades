@@ -7,7 +7,28 @@ namespace MoreUpgrades.Patches
 {
     [HarmonyPatch(typeof(PhysGrabObject))]
     internal class PhysGrabObjectPatch
-    {   
+    {
+        [HarmonyPatch("Update")]
+        [HarmonyPostfix]
+        static void Update(PhysGrabObject __instance, bool ___isValuable, PlayerAvatar ___lastPlayerGrabbing)
+        {
+            if (MoreUpgradesManager.instance == null || !___isValuable)
+                return;
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Item Resist");
+            if (upgradeItem == null)
+                return;
+            if (___lastPlayerGrabbing != null)
+            {
+                Dictionary<PhysGrabObject, PlayerAvatar> lastPlayerGrabbed =
+                    upgradeItem.GetVariable<Dictionary<PhysGrabObject, PlayerAvatar>>("Last Player Grabbed");
+                if (lastPlayerGrabbed.TryGetValue(__instance, out PlayerAvatar playerAvatar) && playerAvatar == ___lastPlayerGrabbing)
+                    return;
+                else if (lastPlayerGrabbed.ContainsKey(__instance))
+                    lastPlayerGrabbed.Remove(__instance);
+                lastPlayerGrabbed.Add(__instance, ___lastPlayerGrabbing);
+            }
+        }
+
         [HarmonyPatch("OnDestroy")]
         [HarmonyPostfix]
         static void OnDestroy(PhysGrabObject __instance)
@@ -17,10 +38,10 @@ namespace MoreUpgrades.Patches
             ValuableObject valuableObject = __instance.gameObject.GetComponent<ValuableObject>();
             if (valuableObject == null)
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.name == "Valuable Count");
-            if (upgradeItem == null)
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Valuable Count");
+            if (upgradeItem == null || (__instance.GetComponent<SurplusValuable>() && upgradeItem.GetConfig<bool>("Ignore Money Bags")))
                 return;
-            List<ValuableObject> currentValuables = upgradeItem.GetVariable<List<ValuableObject>>("CurrentValuables");
+            List<ValuableObject> currentValuables = upgradeItem.GetVariable<List<ValuableObject>>("Current Valuables");
             if (currentValuables.Contains(valuableObject))
                 currentValuables.Remove(valuableObject);
         }

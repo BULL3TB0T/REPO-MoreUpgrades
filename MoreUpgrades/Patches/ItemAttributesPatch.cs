@@ -11,7 +11,7 @@ namespace MoreUpgrades.Patches
         [HarmonyTranspiler]
         static IEnumerable<CodeInstruction> GetValueTranspiler(IEnumerable<CodeInstruction> instructions)
         {
-            var matcher = new CodeMatcher(instructions);
+            CodeMatcher matcher = new CodeMatcher(instructions);
             matcher.MatchForward(true,
                 new CodeMatch(OpCodes.Ldsfld, AccessTools.Field(typeof(ShopManager), "instance")),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "itemValueMultiplier"))
@@ -19,18 +19,8 @@ namespace MoreUpgrades.Patches
             matcher.Advance(1);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemAttributes), "itemAssetName")),
+                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemAttributes), "item")),
                 new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Plugin), "ItemValueMultiplier"))
-            );
-            matcher.MatchForward(true,
-                new CodeMatch(OpCodes.Ldsfld, AccessTools.Field(typeof(ShopManager), "instance")),
-                new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "upgradeValueIncrease"))
-            );
-            matcher.Advance(1);
-            matcher.Insert(
-                new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemAttributes), "itemAssetName")),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Plugin), "UpgradeValueIncrease"))
             );
             return matcher.InstructionEnumeration();
         }

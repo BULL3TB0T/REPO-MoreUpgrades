@@ -29,7 +29,8 @@ namespace MoreUpgrades.Classes
             }
             if (item == null || prefab == null)
             {
-                Plugin.instance.logger.LogWarning($"{modGUID}: Couldn't register the upgrade item because the item or prefab are not valid.");
+                Plugin.instance.logger.LogWarning(
+                    $"{modGUID}: Couldn't register the upgrade item because the item or prefab are not valid.");
                 return null;
             }
             string name = upgradeItemBase.name;
@@ -38,7 +39,7 @@ namespace MoreUpgrades.Classes
                 Plugin.instance.logger.LogWarning($"{modGUID}: Couldn't register the upgrade item because the base name is not valid.");
                 return null;
             }
-            if (Plugin.instance.upgradeItems.Any(x => x.name.ToLower().Trim() == name.ToLower().Trim()))
+            if (Plugin.instance.upgradeItems.Any(x => x.upgradeItemBase.name.ToLower().Trim() == name.ToLower().Trim()))
             {
                 Plugin.instance.logger.LogWarning($"{modGUID}: An upgrade item with the name '{name.Trim()}' already exists." +
                     " Duplicate upgrade items are not allowed.");

@@ -15,7 +15,7 @@ namespace MoreUpgrades.CustomColorsPatches
             PlayerAvatar playerAvatar = __instance.avatar;
             if (MoreUpgradesManager.instance == null || playerAvatar == SemiFunc.PlayerAvatarLocal())
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.name == "Map Player Tracker");
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Player Tracker");
             if (upgradeItem != null && upgradeItem.GetConfig<bool>("Player Color"))
             {
                 Plugin.instance.RemovePlayerToMap(playerAvatar);

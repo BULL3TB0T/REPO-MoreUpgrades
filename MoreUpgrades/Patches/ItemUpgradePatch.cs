@@ -6,6 +6,7 @@ using UnityEngine.Events;
 
 namespace MoreUpgrades.Patches
 {
+    /*
     [HarmonyPatch(typeof(ItemUpgrade))]
     internal class ItemUpgradePatch
     {
@@ -39,4 +40,5 @@ namespace MoreUpgrades.Patches
             });
         }
     }
+    */
 }
