@@ -108,7 +108,6 @@
     <Compile Include="Patches\MissionUIPatch.cs" />
     <Compile Include="Patches\ValuableObjectPatch.cs" />
     <Compile Include="Patches\PhysGrabObjectPatch.cs" />
-    <Compile Include="Patches\ItemUpgradePatch.cs" />
     <Compile Include="Patches\ShopManagerPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
