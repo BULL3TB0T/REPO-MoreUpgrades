@@ -1,18 +1,36 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using HarmonyLib;
 using REPOLib.Modules;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MoreUpgrades.Classes
 {
-    public class UpgradeItem
+    internal class UpgradeItem
     {
+        internal class Base
+        {
+            public string name = null;
+            public int maxAmount = 1;
+            public int maxAmountInShop = 1;
+            public float minPrice = 1000;
+            public float maxPrice = 1000;
+            public int maxPurchaseAmount = 0;
+            public float priceIncreaseScaling = -1f;
+            public Action<PlayerAvatar, int> onStart;
+            public Action<PlayerAvatar, int> onUpgrade;
+            public Action onVariablesStart;
+            public Action onUpdate;
+            public Action onLateUpdate;
+            public Action onFixedUpdate;
+            public List<string> excludeConfigs = new List<string>();
+        }
+
         public bool isRepoLibImported;
         private string sectionName;
-        public UpgradeItemBase upgradeItemBase;
-        public PlayerUpgrade playerUpgrade;
+        internal Base upgradeBase;
+        internal PlayerUpgrade playerUpgrade;
         private Dictionary<string, ConfigEntryBase> configEntries;
         internal Dictionary<string, int> appliedPlayerDictionary;
         internal Dictionary<string, object> variables;
@@ -26,7 +44,7 @@ namespace MoreUpgrades.Classes
                 Plugin.instance.logger.LogWarning($"A config entry with the key '{key}' already exists. Duplicates are not allowed.");
                 return false;
             }
-            if (upgradeItemBase.excludeConfigs.Contains(key))
+            if (upgradeBase.excludeConfigs.Contains(key))
                 return false;
             ConfigEntryBase configEntryBase = null;
             if (defaultValue is int)
@@ -146,19 +164,19 @@ namespace MoreUpgrades.Classes
         {
             configEntries = new Dictionary<string, ConfigEntryBase>();
             AddConfig("Enabled", true, "Whether the upgrade item can be spawned to the shop.");
-            AddConfig("Max Amount", upgradeItemBase.maxAmount, 
+            AddConfig("Max Amount", upgradeBase.maxAmount, 
                 "The maximum number of times the upgrade item can appear in the truck.");
-            AddConfig("Max Amount In Shop", upgradeItemBase.maxAmountInShop,
+            AddConfig("Max Amount In Shop", upgradeBase.maxAmountInShop,
                 "The maximum number of times the upgrade item can appear in the shop.");
-            AddConfig("Minimum Price", upgradeItemBase.minPrice, "The minimum cost to purchase the upgrade item.");
-            AddConfig("Maximum Price", upgradeItemBase.maxPrice, "The maximum cost to purchase the upgrade item.");
-            AddConfig("Price Increase Scaling", upgradeItemBase.priceIncreaseScaling,
+            AddConfig("Minimum Price", upgradeBase.minPrice, "The minimum cost to purchase the upgrade item.");
+            AddConfig("Maximum Price", upgradeBase.maxPrice, "The maximum cost to purchase the upgrade item.");
+            AddConfig("Price Increase Scaling", upgradeBase.priceIncreaseScaling,
                 "The scale of the price increase based on the total number of upgrade item purchased." +
                 "\nSet this value under 0 to use the default scaling.");
             AddConfig("Price Multiplier", isRepoLibImported ? -1f : 1f,
                "The multiplier of the price." +
                "\nSet this value under 0 to use the default multiplier.");
-            AddConfig("Max Purchase Amount", upgradeItemBase.maxPurchaseAmount,
+            AddConfig("Max Purchase Amount", upgradeBase.maxPurchaseAmount,
                 "The maximum number of times the upgrade item can be purchased before it is no longer available in the shop." +
                 "\nSet to 0 to disable the limit.");
             AddConfig("Allow Team Upgrades", false,
@@ -167,42 +185,45 @@ namespace MoreUpgrades.Classes
             AddConfig("Starting Amount", 0, "The number of times the upgrade item is applied at the start of the game.");
         }
 
-        internal UpgradeItem(UpgradeItemBase upgradeItemBase)
+        internal UpgradeItem(Base upgradeBase)
         {
-            sectionName = upgradeItemBase.name + (isRepoLibImported ? $" ({Compatibility.REPOLib.modGUID})" : "");
-            this.upgradeItemBase = upgradeItemBase;
+            sectionName = upgradeBase.name;
+            this.upgradeBase = upgradeBase;
             appliedPlayerDictionary = new Dictionary<string, int>();
             variables = new Dictionary<string, object>();
             SetupConfig();
-            Item item = Plugin.instance.assetBundle.LoadAsset<Item>(upgradeItemBase.name);
-            string assetName = $"Modded Item Upgrade Player {upgradeItemBase.name}";
+            Item item = ScriptableObject.CreateInstance<Item>();
+            item.itemType = SemiFunc.itemType.player_upgrade;
+            item.emojiIcon = SemiFunc.emojiIcon.orb_battery;
+            item.itemVolume = SemiFunc.itemVolume.upgrade;
+            string assetName = $"Modded Item Upgrade Player {upgradeBase.name}";
             item.name = assetName;
-            item.itemName = $"{upgradeItemBase.name} Upgrade";
-            item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeItemBase.maxAmount;
+            item.itemName = $"{upgradeBase.name} Upgrade";
+            item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeBase.maxAmount;
             item.maxAmountInShop = HasConfig("Max Amount In Shop") ? GetConfig<int>("Max Amount In Shop") :
-                upgradeItemBase.maxAmountInShop;
+                upgradeBase.maxAmountInShop;
             item.maxPurchaseAmount = HasConfig("Max Purchase Amount") ? GetConfig<int>("Max Purchase Amount") :
-                upgradeItemBase.maxPurchaseAmount;
+                upgradeBase.maxPurchaseAmount;
             item.maxPurchase = item.maxPurchaseAmount > 0;
             Value value = ScriptableObject.CreateInstance<Value>();
-            value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeItemBase.minPrice;
-            value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeItemBase.maxPrice;
+            value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeBase.minPrice;
+            value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeBase.maxPrice;
             item.value = value;
-            GameObject prefab = Plugin.instance.assetBundle.LoadAsset<GameObject>($"{upgradeItemBase.name} Prefab");
+            GameObject prefab = Plugin.instance.assetBundle.LoadAsset<GameObject>(upgradeBase.name);
             prefab.name = assetName;
-            REPOLibItemUpgrade itemUpgrade = prefab.AddComponent<REPOLibItemUpgrade>();
-            AccessTools.Field(typeof(REPOLibItemUpgrade), "_upgradeId").SetValue(itemUpgrade, upgradeItemBase.name);
+            REPOLibItemUpgrade itemUpgrade = prefab.GetComponent<REPOLibItemUpgrade>();
+            AccessTools.Field(typeof(REPOLibItemUpgrade), "_upgradeId").SetValue(itemUpgrade, upgradeBase.name);
             ItemAttributes itemAttributes = prefab.GetComponent<ItemAttributes>();
             itemAttributes.item = item;
             Items.RegisterItem(itemAttributes);
-            playerUpgrade = Upgrades.RegisterUpgrade(upgradeItemBase.name, item, upgradeItemBase.onStart, upgradeItemBase.onUpgrade);
+            playerUpgrade = Upgrades.RegisterUpgrade(upgradeBase.name, item, upgradeBase.onStart, upgradeBase.onUpgrade);
         }
 
         internal UpgradeItem(PlayerUpgrade playerUpgrade)
         {
             isRepoLibImported = true;
             Item item = playerUpgrade.Item;
-            upgradeItemBase = new UpgradeItemBase
+            upgradeBase = new Base
             {
                 name = playerUpgrade.UpgradeId,
                 maxAmount = item.maxAmount,
@@ -211,17 +232,17 @@ namespace MoreUpgrades.Classes
                 minPrice = item.value.valueMin,
                 maxPrice = item.value.valueMax
             };
-            sectionName = $"{upgradeItemBase.name} ({Compatibility.REPOLib.modGUID})";
+            sectionName = $"{upgradeBase.name} ({Compatibility.REPOLib.modGUID})";
             appliedPlayerDictionary = new Dictionary<string, int>();
             SetupConfig();
-            item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeItemBase.maxAmount;
+            item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeBase.maxAmount;
             item.maxAmountInShop = HasConfig("Max Amount In Shop") ? GetConfig<int>("Max Amount In Shop") : 
-                upgradeItemBase.maxAmountInShop;
+                upgradeBase.maxAmountInShop;
             item.maxPurchaseAmount = HasConfig("Max Purchase Amount") ? GetConfig<int>("Max Purchase Amount") : 
-                upgradeItemBase.maxPurchaseAmount;
+                upgradeBase.maxPurchaseAmount;
             item.maxPurchase = item.maxPurchaseAmount > 0;
-            item.value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeItemBase.minPrice;
-            item.value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeItemBase.maxPrice;
+            item.value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeBase.minPrice;
+            item.value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeBase.maxPrice;
             this.playerUpgrade = playerUpgrade;
         }
     }

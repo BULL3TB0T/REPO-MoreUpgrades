@@ -41,7 +41,7 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null || __instance == SemiFunc.PlayerAvatarLocal())
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Player Tracker");
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
             if (upgradeItem != null && upgradeItem.GetConfig<bool>("Player Color"))
             {
                 Plugin.instance.RemovePlayerToMap(__instance);

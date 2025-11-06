@@ -19,7 +19,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.5.2";
+        private const string modVer = "1.5.3";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
@@ -70,7 +70,7 @@ namespace MoreUpgrades
 
         internal void AddEnemyToMap(Component component, string enemyName = null)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Enemy Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
             if (upgradeItem == null)
                 return;
             if (component is EnemyParent enemyParent && enemyName == null)
@@ -90,7 +90,7 @@ namespace MoreUpgrades
 
         internal void RemoveEnemyFromMap(Component component, string enemyName = null)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Enemy Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
             if (upgradeItem == null)
                 return;
             if (component is EnemyParent enemyParent && enemyName == null)
@@ -110,7 +110,7 @@ namespace MoreUpgrades
 
         internal void AddPlayerToMap(PlayerAvatar playerAvatar)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Player Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
             if (upgradeItem == null)
                 return;
             GameObject visuals = GetVisualsFromComponent(playerAvatar);
@@ -128,7 +128,7 @@ namespace MoreUpgrades
 
         internal void RemovePlayerToMap(PlayerAvatar playerAvatar)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Map Player Tracker");
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
             if (upgradeItem == null)
                 return;
             GameObject visuals = GetVisualsFromComponent(playerAvatar);
@@ -171,7 +171,7 @@ namespace MoreUpgrades
                 "Exclude specific REPOLib upgrades by listing their IDs, seperated by commas." +
                 "\nThis setting only has an effect if 'Import Upgrades' is enabled.");
             upgradeItems = new List<UpgradeItem>();
-            UpgradeItemBase sprintUsageBase = new UpgradeItemBase
+            UpgradeItem.Base sprintUsageBase = new UpgradeItem.Base
             {
                 name = "Sprint Usage",
                 maxAmount = 10,
@@ -196,7 +196,7 @@ namespace MoreUpgrades
             sprintUsage.AddConfig("Scaling Factor", 0.9f,
                 "Formula: energySprintDrain * (scalingFactor ^ upgradeLevel))");
             upgradeItems.Add(sprintUsage);
-            UpgradeItemBase valuableCountBase = new UpgradeItemBase
+            UpgradeItem.Base valuableCountBase = new UpgradeItem.Base
             {
                 name = "Valuable Count",
                 minPrice = 30000,
@@ -294,7 +294,7 @@ namespace MoreUpgrades
                     }
                 }
             };
-            UpgradeItemBase mapEnemyTrackerBase = new UpgradeItemBase
+            UpgradeItem.Base mapEnemyTrackerBase = new UpgradeItem.Base
             {
                 name = "Map Enemy Tracker",
                 minPrice = 50000,
@@ -322,7 +322,7 @@ namespace MoreUpgrades
                 "Exclude specific enemies from displaying their icon by listing their names." +
                 "\nExample: 'Gnome, Clown', seperated by commas.");
             upgradeItems.Add(mapEnemyTracker);
-            UpgradeItemBase mapPlayerTrackerBase = new UpgradeItemBase
+            UpgradeItem.Base mapPlayerTrackerBase = new UpgradeItem.Base
             {
                 name = "Map Player Tracker",
                 minPrice = 30000,
@@ -346,7 +346,7 @@ namespace MoreUpgrades
             mapPlayerTracker.AddConfig("Player Color", false, "Whether the icon should be colored as the player.");
             mapPlayerTracker.AddConfig("Color", Color.blue, "The color of the icon.");
             upgradeItems.Add(mapPlayerTracker);
-            UpgradeItemBase itemResistBase = new UpgradeItemBase
+            UpgradeItem.Base itemResistBase = new UpgradeItem.Base
             {
                 name = "Item Resist",
                 maxAmount = 10,

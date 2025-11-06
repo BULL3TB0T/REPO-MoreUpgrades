@@ -93,7 +93,6 @@
   <ItemGroup>
     <Compile Include="Classes\MoreUpgradesManager.cs" />
     <Compile Include="Classes\UpgradeItem.cs" />
-    <Compile Include="Classes\UpgradeItemBase.cs" />
     <Compile Include="Compatibility\CustomColor.cs" />
     <Compile Include="Compatibility\REPOLib.cs" />
     <Compile Include="CustomColorsPatches\ModdedColorPlayerAvatarPatch.cs" />
@@ -126,7 +125,6 @@
   <ItemGroup>
     <None Include="Resources\moreupgrades" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /q/y/i "$(TargetPath)" "C:\Users\BULLETBOT\AppData\Roaming\r2modmanPlus-local\REPO\profiles\vanilla modded\BepInEx\plugins\BULLETBOT-MoreUpgrades" /E /H /C

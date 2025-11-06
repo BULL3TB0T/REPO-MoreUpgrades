@@ -15,7 +15,7 @@ namespace MoreUpgrades.Classes
             foreach (UpgradeItem upgradeItem in Plugin.instance.upgradeItems)
             {
                 upgradeItem.variables?.Clear();
-                upgradeItem.upgradeItemBase.onVariablesStart?.Invoke();
+                upgradeItem.upgradeBase.onVariablesStart?.Invoke();
             }
             if (SemiFunc.IsMasterClientOrSingleplayer())
                 StartCoroutine("WaitUntilLevel");
@@ -24,12 +24,12 @@ namespace MoreUpgrades.Classes
         private void Update()
         {
             foreach (UpgradeItem upgradeItem in Plugin.instance.upgradeItems)
-                upgradeItem.upgradeItemBase.onUpdate?.Invoke();
+                upgradeItem.upgradeBase.onUpdate?.Invoke();
         }
         private void LateUpdate()
         {
             foreach (UpgradeItem upgradeItem in Plugin.instance.upgradeItems)
-                upgradeItem.upgradeItemBase.onLateUpdate?.Invoke();
+                upgradeItem.upgradeBase.onLateUpdate?.Invoke();
         }
 
         private void FixedUpdate()
@@ -67,7 +67,7 @@ namespace MoreUpgrades.Classes
                         }
                     }
                 }
-                upgradeItem.upgradeItemBase.onFixedUpdate?.Invoke();
+                upgradeItem.upgradeBase.onFixedUpdate?.Invoke();
             }
         }
 

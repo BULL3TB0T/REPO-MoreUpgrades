@@ -29,7 +29,7 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null)
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Valuable Count");
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Valuable Count");
             if (upgradeItem == null)
                 return;
             upgradeItem.SetVariable("Changed", true);

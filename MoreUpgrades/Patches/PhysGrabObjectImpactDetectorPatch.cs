@@ -16,7 +16,7 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null || !___isValuable)
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Item Resist");
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Item Resist");
             if (upgradeItem == null)
                 return;
             List<PhysGrabber> playerGrabbing = ___physGrabObject.playerGrabbing;

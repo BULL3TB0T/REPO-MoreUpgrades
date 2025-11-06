@@ -14,7 +14,7 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null || !___isValuable)
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Item Resist");
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Item Resist");
             if (upgradeItem == null)
                 return;
             if (___lastPlayerGrabbing != null)
@@ -38,7 +38,7 @@ namespace MoreUpgrades.Patches
             ValuableObject valuableObject = __instance.gameObject.GetComponent<ValuableObject>();
             if (valuableObject == null)
                 return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeItemBase.name == "Valuable Count");
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Valuable Count");
             if (upgradeItem == null || (__instance.GetComponent<SurplusValuable>() && upgradeItem.GetConfig<bool>("Ignore Money Bags")))
                 return;
             List<ValuableObject> currentValuables = upgradeItem.GetVariable<List<ValuableObject>>("Current Valuables");

@@ -75,7 +75,7 @@ namespace MoreUpgrades.Patches
             if (upgradeItem == null)
                 return upgradeValueIncrease;
             float value = upgradeItem.HasConfig("Price Increase Scaling") ? 
-                upgradeItem.GetConfig<float>("Price Increase Scaling") : upgradeItem.upgradeItemBase.priceIncreaseScaling;
+                upgradeItem.GetConfig<float>("Price Increase Scaling") : upgradeItem.upgradeBase.priceIncreaseScaling;
             if (value < 0)
                 value = upgradeValueIncrease;
             return value;
