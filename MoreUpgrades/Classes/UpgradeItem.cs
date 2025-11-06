@@ -9,7 +9,7 @@ namespace MoreUpgrades.Classes
 {
     public class UpgradeItem
     {
-        public string modGUID { get; private set; }
+        public bool isRepoLibImported;
         private string sectionName;
         public UpgradeItemBase upgradeItemBase;
         public PlayerUpgrade playerUpgrade;
@@ -155,7 +155,7 @@ namespace MoreUpgrades.Classes
             AddConfig("Price Increase Scaling", upgradeItemBase.priceIncreaseScaling,
                 "The scale of the price increase based on the total number of upgrade item purchased." +
                 "\nSet this value under 0 to use the default scaling.");
-            AddConfig("Price Multiplier", modGUID == Compatibility.REPOLib.modGUID ? -1f : 1f,
+            AddConfig("Price Multiplier", isRepoLibImported ? -1f : 1f,
                "The multiplier of the price." +
                "\nSet this value under 0 to use the default multiplier.");
             AddConfig("Max Purchase Amount", upgradeItemBase.maxPurchaseAmount,
@@ -167,18 +167,16 @@ namespace MoreUpgrades.Classes
             AddConfig("Starting Amount", 0, "The number of times the upgrade item is applied at the start of the game.");
         }
 
-        internal UpgradeItem(UpgradeItemBase upgradeItemBase, string modGUID = null, Item modItem = null, GameObject modPrefab = null)
+        internal UpgradeItem(UpgradeItemBase upgradeItemBase)
         {
-            this.modGUID = modGUID;
-            sectionName = upgradeItemBase.name + (!modGUID.IsNullOrWhiteSpace() ? $" ({modGUID})" : "");
+            sectionName = upgradeItemBase.name + (isRepoLibImported ? $" ({Compatibility.REPOLib.modGUID})" : "");
             this.upgradeItemBase = upgradeItemBase;
             appliedPlayerDictionary = new Dictionary<string, int>();
             variables = new Dictionary<string, object>();
             SetupConfig();
-            Item item = modItem ?? Plugin.instance.assetBundle.LoadAsset<Item>(upgradeItemBase.name);
+            Item item = Plugin.instance.assetBundle.LoadAsset<Item>(upgradeItemBase.name);
             string assetName = $"Modded Item Upgrade Player {upgradeItemBase.name}";
             item.name = assetName;
-            item.itemAssetName = assetName;
             item.itemName = $"{upgradeItemBase.name} Upgrade";
             item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeItemBase.maxAmount;
             item.maxAmountInShop = HasConfig("Max Amount In Shop") ? GetConfig<int>("Max Amount In Shop") :
@@ -186,22 +184,23 @@ namespace MoreUpgrades.Classes
             item.maxPurchaseAmount = HasConfig("Max Purchase Amount") ? GetConfig<int>("Max Purchase Amount") :
                 upgradeItemBase.maxPurchaseAmount;
             item.maxPurchase = item.maxPurchaseAmount > 0;
-            item.value = ScriptableObject.CreateInstance<Value>();
-            item.value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeItemBase.minPrice;
-            item.value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeItemBase.maxPrice;
-            GameObject prefab = modPrefab ?? Plugin.instance.assetBundle.LoadAsset<GameObject>($"{upgradeItemBase.name} Prefab");
+            Value value = ScriptableObject.CreateInstance<Value>();
+            value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeItemBase.minPrice;
+            value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeItemBase.maxPrice;
+            item.value = value;
+            GameObject prefab = Plugin.instance.assetBundle.LoadAsset<GameObject>($"{upgradeItemBase.name} Prefab");
+            prefab.name = assetName;
             REPOLibItemUpgrade itemUpgrade = prefab.AddComponent<REPOLibItemUpgrade>();
             AccessTools.Field(typeof(REPOLibItemUpgrade), "_upgradeId").SetValue(itemUpgrade, upgradeItemBase.name);
-            prefab.name = assetName;
-            prefab.GetComponent<ItemAttributes>().item = item;
-            item.prefab = prefab;
-            Items.RegisterItem(item);
+            ItemAttributes itemAttributes = prefab.GetComponent<ItemAttributes>();
+            itemAttributes.item = item;
+            Items.RegisterItem(itemAttributes);
             playerUpgrade = Upgrades.RegisterUpgrade(upgradeItemBase.name, item, upgradeItemBase.onStart, upgradeItemBase.onUpgrade);
         }
 
         internal UpgradeItem(PlayerUpgrade playerUpgrade)
         {
-            modGUID = Compatibility.REPOLib.modGUID;
+            isRepoLibImported = true;
             Item item = playerUpgrade.Item;
             upgradeItemBase = new UpgradeItemBase
             {
@@ -212,7 +211,7 @@ namespace MoreUpgrades.Classes
                 minPrice = item.value.valueMin,
                 maxPrice = item.value.valueMax
             };
-            sectionName = $"{upgradeItemBase.name} ({modGUID})";
+            sectionName = $"{upgradeItemBase.name} ({Compatibility.REPOLib.modGUID})";
             appliedPlayerDictionary = new Dictionary<string, int>();
             SetupConfig();
             item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeItemBase.maxAmount;

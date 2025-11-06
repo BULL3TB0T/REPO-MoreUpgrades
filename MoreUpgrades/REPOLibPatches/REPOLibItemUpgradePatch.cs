@@ -15,7 +15,7 @@ namespace MoreUpgrades.REPOLibPatches
         static void Start(REPOLibItemUpgrade __instance, string ____upgradeId)
         {
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => 
-                x.upgradeItemBase.name == ____upgradeId && x.modGUID != Compatibility.REPOLib.modGUID);
+                x.upgradeItemBase.name == ____upgradeId && !x.isRepoLibImported);
             if (upgradeItem == null)
                 return;
             __instance.GetComponent<ItemUpgrade>().upgradeEvent.AddListener(__instance.Upgrade);
