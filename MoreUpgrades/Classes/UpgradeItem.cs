@@ -193,7 +193,7 @@ namespace MoreUpgrades.Classes
             variables = new Dictionary<string, object>();
             SetupConfig();
             Item item = ScriptableObject.CreateInstance<Item>();
-            item.itemType = SemiFunc.itemType.player_upgrade;
+            item.itemType = SemiFunc.itemType.item_upgrade;
             item.emojiIcon = SemiFunc.emojiIcon.orb_battery;
             item.itemVolume = SemiFunc.itemVolume.upgrade;
             string assetName = $"Modded Item Upgrade Player {upgradeBase.name}";

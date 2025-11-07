@@ -17,11 +17,13 @@ namespace MoreUpgrades.Patches
             matcher.MatchForward(false, 
                 new CodeMatch(OpCodes.Br),
                 new CodeMatch(OpCodes.Ldloca_S),
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Dictionary<string, Item>.ValueCollection.Enumerator), "get_Current"))
+                new CodeMatch(OpCodes.Call, 
+                    AccessTools.Method(typeof(Dictionary<string, Item>.ValueCollection.Enumerator), "get_Current"))
             );
             var brLabel = matcher.Operand;
             matcher.MatchForward(true,
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Dictionary<string, Item>.ValueCollection.Enumerator), "get_Current")),
+                new CodeMatch(OpCodes.Call, 
+                    AccessTools.Method(typeof(Dictionary<string, Item>.ValueCollection.Enumerator), "get_Current")),
                 new CodeMatch(OpCodes.Stloc_1)
             );
             matcher.Advance(1);
