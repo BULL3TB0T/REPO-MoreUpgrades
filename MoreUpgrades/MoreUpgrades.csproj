@@ -46,6 +46,9 @@
     <Reference Include="CustomColors">
       <HintPath>Dependencies\CustomColors.dll</HintPath>
     </Reference>
+    <Reference Include="KeybindLib">
+      <HintPath>Dependencies\KeybindLib.dll</HintPath>
+    </Reference>
     <Reference Include="Photon3Unity3D, Version=4.1.8.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\Photon3Unity3D.dll</HintPath>
@@ -69,6 +72,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="Unity.InputSystem, Version=1.14.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\Unity.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\Unity.TextMeshPro.dll</HintPath>
@@ -89,15 +96,22 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\MoreUpgradesManager.cs" />
     <Compile Include="Classes\UpgradeItem.cs" />
     <Compile Include="Compatibility\CustomColor.cs" />
+    <Compile Include="Compatibility\KeybindLib.cs" />
     <Compile Include="Compatibility\REPOLib.cs" />
     <Compile Include="CustomColorsPatches\ModdedColorPlayerAvatarPatch.cs" />
     <Compile Include="Patches\ItemAttributesPatch.cs" />
+    <Compile Include="Patches\MapPatch.cs" />
     <Compile Include="Patches\PhysGrabObjectImpactDetectorPatch.cs" />
+    <Compile Include="Patches\PhysGrabberPatch.cs" />
     <Compile Include="Patches\PlayerAvatarPatch.cs" />
     <Compile Include="Patches\EnemySlowMouthPatch.cs" />
     <Compile Include="Patches\EnemyParentPatch.cs" />

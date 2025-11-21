@@ -2,7 +2,9 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using KeybindLib.Classes;
 using MoreUpgrades.Classes;
+using MoreUpgrades.Patches;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,13 +15,14 @@ using UnityEngine.SceneManagement;
 namespace MoreUpgrades
 {
     [BepInDependency(Compatibility.REPOLib.modGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(Compatibility.KeybindLib.modGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(Compatibility.CustomColors.modGUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(modGUID, modName, modVer)]
     internal class Plugin : BaseUnityPlugin
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.5.4";
+        private const string modVer = "1.5.5";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
@@ -44,19 +47,24 @@ namespace MoreUpgrades
             {
                 EnemyParent enemyParent = component as EnemyParent;
                 Enemy enemy = (Enemy)AccessTools.Field(typeof(EnemyParent), "Enemy").GetValue(component);
-                try
-                {
-                    visuals = enemyParent.EnableObject.gameObject.GetComponentInChildren<Animator>().gameObject;
-                }
-                catch {}
-                if (visuals == null)
+                if (enemyParent.enemyName != "Bella")
                 {
                     try
                     {
-                        visuals = enemy.GetComponent<EnemyVision>().VisionTransform.gameObject;
+                        visuals = enemyParent.GetComponentInChildren<EnemyVision>().VisionTransform.gameObject;
                     }
                     catch { }
+                    if (visuals == null)
+                    {
+                        try
+                        {
+                            visuals = enemyParent.EnableObject.GetComponentInChildren<Animator>().gameObject;
+                        }
+                        catch { }
+                    }
                 }
+                else
+                    visuals = enemy.GetComponentInChildren<EnemyTricycle>().followTargetTransform.gameObject;
                 if (visuals == null)
                     visuals = enemy.gameObject;
             }
@@ -126,7 +134,7 @@ namespace MoreUpgrades
             addToMap.Add((visuals, color));
         }
 
-        internal void RemovePlayerToMap(PlayerAvatar playerAvatar)
+        internal void RemovePlayerFromMap(PlayerAvatar playerAvatar)
         {
             UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
             if (upgradeItem == null)
@@ -141,7 +149,7 @@ namespace MoreUpgrades
             removeFromMap.Add(visuals);
         }
 
-        internal static float ItemValueMultiplier(float itemValueMultiplier, Item item)
+        private static float ItemValueMultiplier(float itemValueMultiplier, Item item)
         {
             if (MoreUpgradesManager.instance == null)
                 return itemValueMultiplier;
@@ -217,9 +225,8 @@ namespace MoreUpgrades
             {
                 if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop())
                     return;
-                PlayerAvatar localPlayerAvatar = SemiFunc.PlayerAvatarLocal();
-                if (localPlayerAvatar != null && MissionUI.instance != null
-                    && valuableCount.playerUpgrade.GetLevel(localPlayerAvatar) != 0)
+                PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
+                if (MissionUI.instance != null && playerAvatar != null && valuableCount.playerUpgrade.GetLevel(playerAvatar) > 0)
                 {
                     TextMeshProUGUI missionText = 
                         (TextMeshProUGUI)AccessTools.Field(typeof(MissionUI), "Text").GetValue(MissionUI.instance);
@@ -264,8 +271,8 @@ namespace MoreUpgrades
             upgradeItems.Add(valuableCount);
             void UpdateTracker(UpgradeItem upgradeItem)
             {
-                PlayerAvatar localPlayerAvatar = SemiFunc.PlayerAvatarLocal();
-                if (localPlayerAvatar != null && upgradeItem.playerUpgrade.GetLevel(localPlayerAvatar) != 0)
+                PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
+                if (playerAvatar != null && upgradeItem.playerUpgrade.GetLevel(playerAvatar) > 0)
                 {
                     List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
                     for (int i = addToMap.Count - 1; i >= 0; i--)
@@ -279,7 +286,7 @@ namespace MoreUpgrades
                         mapCustom.color = color;
                         mapCustom.sprite = upgradeItem.GetConfig<bool>("Arrow Icon") ? 
                             assetBundle.LoadAsset<Sprite>("Map Tracker") :
-                            SemiFunc.PlayerAvatarLocal().playerDeathHead.mapCustom.sprite;
+                            playerAvatar.playerDeathHead.mapCustom.sprite;
                     }
                     List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
                     for (int i = removeFromMap.Count - 1; i >= 0; i--)
@@ -331,7 +338,7 @@ namespace MoreUpgrades
                 priceIncreaseScaling = 0
             };
             UpgradeItem mapPlayerTracker = null;
-            mapPlayerTrackerBase.onVariablesStart = delegate
+            mapPlayerTrackerBase.onVariablesStart += delegate
             {
                 mapPlayerTracker.AddVariable("Add To Map", new List<(GameObject, Color)>());
                 mapPlayerTracker.AddVariable("Remove From Map", new List<GameObject>());
@@ -355,7 +362,7 @@ namespace MoreUpgrades
                 maxPrice = 6000
             };
             UpgradeItem itemResist = null;
-            itemResistBase.onVariablesStart = delegate
+            itemResistBase.onVariablesStart += delegate
             {
                 itemResist.AddVariable("Last Player Grabbed", new Dictionary<PhysGrabObject, PlayerAvatar>());
             };
@@ -363,6 +370,91 @@ namespace MoreUpgrades
             itemResist.AddConfig("Scaling Factor", 0.9f,
                 "Formula: valueLost * (scalingFactor ^ upgradeLevel)");
             upgradeItems.Add(itemResist);
+            UpgradeItem.Base mapZoomBase = new UpgradeItem.Base
+            {
+                name = "Map Zoom",
+                maxAmount = 2,
+                maxAmountInShop = 1,
+                minPrice = 20000,
+                maxPrice = 35000,
+                maxPurchaseAmount = 2
+            };
+            UpgradeItem mapZoom = null;
+            void UpdateMapZoom(PlayerAvatar playerAvatar, int level)
+            {
+                if (PlayerController.instance.playerAvatarScript != playerAvatar)
+                    return;
+                MapPatch.mapCamera.orthographicSize = MapPatch.defaultMapZoom + level * mapZoom.GetConfig<float>("Scaling Factor");
+            }
+            mapZoomBase.onStart += UpdateMapZoom;
+            mapZoomBase.onUpgrade += UpdateMapZoom;
+            mapZoom = new UpgradeItem(mapZoomBase);
+            mapZoom.AddConfig("Scaling Factor", 0.75f,
+                "Formula: defaultMapZoom + upgradeLevel * scalingFactor");
+            upgradeItems.Add(mapZoom);
+            UpgradeItem autoScan = new UpgradeItem(new UpgradeItem.Base
+            {
+                name = "Autoscan",
+                maxAmount = 3,
+                maxAmountInShop = 1,
+                minPrice = 45000,
+                maxPrice = 50000,
+                maxPurchaseAmount = 3
+            });
+            autoScan.AddConfig("Silent Scanning", false,
+                "Whether the scanned items should be silent or not.");
+            autoScan.AddConfig("Scaling Factor", 5f,
+                "Formula: upgradeLevel * scalingFactor");
+            upgradeItems.Add(autoScan);
+            UpgradeItem itemValue = new UpgradeItem(new UpgradeItem.Base
+            {
+                name = "Item Value",
+                maxAmount = 10,
+                maxAmountInShop = 2,
+                minPrice = 75000,
+                maxPrice = 82500
+            });
+            itemValue.AddConfig("Scaling Factor", 0.05f,
+                "This variable is based on the host!\nFormula: itemValue * (1 + upgradeLevel * scalingFactor)");
+            upgradeItems.Add(itemValue);
+            UpgradeItem.Base extraLifeBase = new UpgradeItem.Base
+            {
+                name = "Extra Life",
+                maxAmount = 10,
+                maxAmountInShop = 2,
+                minPrice = 150000,
+                maxPrice = 225000
+            };
+            UpgradeItem extraLife = null;
+            KeybindData revive = Keybinds.Register("Revive", "<Keyboard>/r");
+            extraLifeBase.onUpdate += delegate
+            {
+                if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop() || SemiFunc.RunIsArena())
+                    return;
+                PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
+                if (playerAvatar != null && extraLife.playerUpgrade.GetLevel(playerAvatar) > 0)
+                {
+                    if (!(bool)AccessTools.Field(typeof(PlayerAvatar), "isDisabled").GetValue(playerAvatar) ||
+                        !(bool)AccessTools.Field(typeof(PlayerAvatar), "deadSet").GetValue(playerAvatar))
+                        return;
+                    if (InputManager.instance.KeyUp(revive.inputKey))
+                    {
+                        playerAvatar.Revive();
+                        PlayerHealth playerHealth = playerAvatar.playerHealth;
+                        playerHealth.HealOther(
+                            (int)AccessTools.Field(typeof(PlayerHealth), "maxHealth").GetValue(playerHealth), false);
+                        extraLife.playerUpgrade.RemoveLevel(playerAvatar);
+                        playerHealth.InvincibleSet(extraLife.GetConfig<float>(
+                            $"{(SemiFunc.IsMultiplayer() ? "Multiplayer" : "Singleplayer")} Invincibility Timer"));
+                    }
+                }
+            };
+            extraLife = new UpgradeItem(extraLifeBase);
+            extraLife.AddConfig("Singleplayer Invincibility Timer", 3f,
+                "After reviving, you will be given a short invincibility period");
+            extraLife.AddConfig("Multiplayer Invincibility Timer", 0f,
+                "After reviving, you will be given a short invincibility period");
+            upgradeItems.Add(extraLife);
             SceneManager.activeSceneChanged += delegate
             {
                 if (RunManager.instance == null || RunManager.instance.levelCurrent == RunManager.instance.levelMainMenu 

@@ -3,14 +3,13 @@ using MoreUpgrades.Classes;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
-using System.Text.RegularExpressions;
 
 namespace MoreUpgrades.Patches
 {
-    [HarmonyPatch(typeof(MissionUIPatch))]
+    [HarmonyPatch(typeof(MissionUI))]
     internal class MissionUIPatch
     {
-        [HarmonyPatch(typeof(MissionUI), "MissionText")]
+        [HarmonyPatch("MissionText")]
         [HarmonyTranspiler]
         static IEnumerable<CodeInstruction> MissionTextTranspiler(IEnumerable<CodeInstruction> instructions)
         {
