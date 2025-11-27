@@ -22,7 +22,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.5.7";
+        private const string modVer = "1.5.8";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
