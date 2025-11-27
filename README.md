@@ -1,16 +1,21 @@
 # MoreUpgrades
 - Adds more upgrade items to the game.
-- All players need to have the same config! (**Note:** Some of them can be client-sided.)
-## Items
-- **Sprint Usage**: It uses less stamina when sprinting. *Can be upgraded multiple times*.
+- All players need to have the same config! (**Note:** Some of them can be client-sided or server-sided.)
+- The upgrade item designs are made by "Kizzycocoa" (1277336819951730739)
+## Upgrade Items
+- **Sprint Usage**: Makes you able to use less stamina while sprinting. *Can be upgraded multiple times*.
 - **Valuable Count**: Displays the number of valuables under the mission text. *Can be upgraded only once*.
 - **Map Enemy Tracker**: Tracks enemies in the map radar. *Can be upgraded only once*.
 - **Map Player Tracker**: Tracks players in the map radar. *Can be upgraded only once*.
-- **Item Resist**: It adds item resistance to withstand the hits easier. *Can be upgraded multiple times*. (***Credits to the original mod creator called "Top Sandwich" (109074579716087808).***)
+- **Item Resist**: Makes you able to withstand item hits easier. *Can be upgraded multiple times*. (***Credits to the [ItemResistUpgrade mod](https://thunderstore.io/c/repo/p/TopSandwich/ItemResistUpgrade) creator called "Top Sandwich" (109074579716087808).***)
+- **Map Zoom**: Decreases the zoom level of the map radar. *Can be upgraded twice unless you have a mod that spawns them in a level*.
+- **Autoscan**: Automatically scans for items within a given range. *Can be upgraded three times unless you have a mod that spawns them in a level*.
+- **Item Value**: Increases item value globally during level generation. *Can be upgraded multiple times*.
+- **Extra Life**: Makes you able to revive by pressing the Tumble keybind while being dead. *Can be upgraded multiple times, but when used, the upgrade count decreases*.
 ## REPOLib Configuration
 - **Import Upgrades**: Whether to import the upgrades from [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib).
 - **Exclude Upgrade IDs**: Exclude specific [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib) upgrades by listing their IDs, seperated by commas.
-## Item Configuration
+## Upgrade Item Configuration
 - **Enabled**: Whether the upgrade item can be spawned to the shop.
 - **Max Amount**: The maximum number of times the upgrade item can appear in the truck.
 - **Max Amount In Shop**: The maximum number of times the upgrade item can appear in the shop.
@@ -25,25 +30,3 @@
 ## Note
 Some upgrade items have more configuration.
 Check the config file after updates, as values may change between versions.
-## Adding Custom Upgrade Items
-1. **Use the Project Patcher**: Follow the instructions in the [R.E.P.O. Project Patcher](https://github.com/Kesomannen/unity-repo-project-patcher)'s README.
-2. **Find an Existing Item**: Search for an item in the project that you want to use as a reference.
-3. **Create Your Own Item and Prefab**: Duplicate it and modify the item and the prefab as you wish.
-4. **Make an Asset Bundle**: Package your item and prefab into an asset bundle so they can be loaded to the game.
-- Afterwards you can use these methods:
-```
-MoreUpgradesLib.IsManagerActive() => bool
-
-MoreUpgradesLib.GetCoreUpgradeItems() => IReadOnlyList<UpgradeItem>
-
-MoreUpgradesLib.GetUpgradeItemsByMod(
-    string modGUID
-) => IReadOnlyList<UpgradeItem>
-
-MoreUpgradesLib.Register(
-    string modGUID,
-    Item item,
-    GameObject prefab,
-    UpgradeItemBase upgradeItemBase
-) => UpgradeItem
-```

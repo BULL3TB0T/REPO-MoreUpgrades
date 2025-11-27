@@ -22,7 +22,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.5.5";
+        private const string modVer = "1.5.6";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
@@ -425,35 +425,22 @@ namespace MoreUpgrades
                 minPrice = 150000,
                 maxPrice = 225000
             };
-            UpgradeItem extraLife = null;
-            KeybindData revive = Keybinds.Register("Revive", "<Keyboard>/r");
+            Keybind reviveKeybind = Keybinds.Bind("Revive", "<Keyboard>/r");
             extraLifeBase.onUpdate += delegate
             {
-                if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop() || SemiFunc.RunIsArena())
+                if (MoreUpgradesManager.instance == null)
                     return;
                 PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
-                if (playerAvatar != null && extraLife.playerUpgrade.GetLevel(playerAvatar) > 0)
-                {
-                    if (!(bool)AccessTools.Field(typeof(PlayerAvatar), "isDisabled").GetValue(playerAvatar) ||
-                        !(bool)AccessTools.Field(typeof(PlayerAvatar), "deadSet").GetValue(playerAvatar))
-                        return;
-                    if (InputManager.instance.KeyUp(revive.inputKey))
-                    {
-                        playerAvatar.Revive();
-                        PlayerHealth playerHealth = playerAvatar.playerHealth;
-                        playerHealth.HealOther(
-                            (int)AccessTools.Field(typeof(PlayerHealth), "maxHealth").GetValue(playerHealth), false);
-                        extraLife.playerUpgrade.RemoveLevel(playerAvatar);
-                        playerHealth.InvincibleSet(extraLife.GetConfig<float>(
-                            $"{(SemiFunc.IsMultiplayer() ? "Multiplayer" : "Singleplayer")} Invincibility Timer"));
-                    }
-                }
+                if (playerAvatar == null)
+                    return;
+                if (InputManager.instance.KeyUp(reviveKeybind.inputKey))
+                    MoreUpgradesManager.instance.Revive(playerAvatar);
             };
-            extraLife = new UpgradeItem(extraLifeBase);
+            UpgradeItem extraLife = new UpgradeItem(extraLifeBase);
             extraLife.AddConfig("Singleplayer Invincibility Timer", 3f,
-                "After reviving, you will be given a short invincibility period");
+                "This variable is based on the host! After reviving, you will be given a short invincibility period.");
             extraLife.AddConfig("Multiplayer Invincibility Timer", 0f,
-                "After reviving, you will be given a short invincibility period");
+                "This variable is based on the host! After reviving, you will be given a short invincibility period.");
             upgradeItems.Add(extraLife);
             SceneManager.activeSceneChanged += delegate
             {

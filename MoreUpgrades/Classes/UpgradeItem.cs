@@ -46,42 +46,7 @@ namespace MoreUpgrades.Classes
             }
             if (upgradeBase.excludeConfigs.Contains(key))
                 return false;
-            ConfigEntryBase configEntryBase = null;
-            if (defaultValue is int)
-            {
-                configEntryBase = Plugin.instance.Config.Bind(sectionName, key, defaultValue, 
-                    new ConfigDescription(description, new AcceptableValueRange<int>(0, 1000)));
-            }
-            else if (defaultValue is float)
-            {
-                configEntryBase = Plugin.instance.Config.Bind(sectionName, key, defaultValue,
-                    new ConfigDescription(description, new AcceptableValueRange<float>(-1, 100000)));
-            }
-            else
-                configEntryBase = Plugin.instance.Config.Bind(sectionName, key, defaultValue, description);
-            configEntries.Add(key, configEntryBase);
-            return true;
-        }
-
-        public bool AddConfig<T>(string key, T defaultValue, ConfigDescription description = null)
-        {
-            if (configEntries.ContainsKey(key))
-            {
-                Plugin.instance.logger.LogWarning($"A config entry with the key '{key}' already exists. Duplicates are not allowed.");
-                return false;
-            }
             configEntries.Add(key, Plugin.instance.Config.Bind(sectionName, key, defaultValue, description));
-            return true;
-        }
-
-        public bool AddConfig(string key, ConfigEntryBase value)
-        {
-            if (configEntries.ContainsKey(key))
-            {
-                Plugin.instance.logger.LogWarning($"A config entry with the key '{key}' already exists. Duplicates are not allowed.");
-                return false;
-            }
-            configEntries.Add(key, value);
             return true;
         }
 

@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿using HarmonyLib;
+using Photon.Pun;
+using REPOLib.Modules;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -7,11 +10,14 @@ namespace MoreUpgrades.Classes
     internal class MoreUpgradesManager : MonoBehaviour
     {
         internal static MoreUpgradesManager instance;
+        private PhotonView photonView;
         private bool checkPlayerUpgrades;
 
         private void Awake()
         {
             instance = this;
+            photonView = gameObject.AddComponent<PhotonView>();
+            photonView.ViewID = 876842;
             foreach (UpgradeItem upgradeItem in Plugin.instance.upgradeItems)
             {
                 upgradeItem.variables?.Clear();
@@ -75,6 +81,57 @@ namespace MoreUpgrades.Classes
         {
             yield return new WaitUntil(() => SemiFunc.LevelGenDone());
             checkPlayerUpgrades = true;
+        }
+
+        public void Revive(PlayerAvatar playerAvatar)
+        {
+            string steamId = SemiFunc.PlayerGetSteamID(playerAvatar);
+            if (steamId == null)
+                return;
+            if (!SemiFunc.IsMultiplayer())
+            {
+                ReviveRPC(steamId);
+                return;
+            }
+            photonView.RPC("ReviveRPC", RpcTarget.MasterClient, new object[] { steamId });
+        }
+
+        [PunRPC]
+        private void ReviveRPC(string steamId)
+        {
+            if (SemiFunc.RunIsShop() || SemiFunc.RunIsArena())
+                return;
+            PlayerAvatar playerAvatar = SemiFunc.PlayerAvatarGetFromSteamID(steamId);
+            if (playerAvatar == null ||
+                !(bool)AccessTools.Field(typeof(PlayerAvatar), "isDisabled").GetValue(playerAvatar) ||
+                !(bool)AccessTools.Field(typeof(PlayerAvatar), "deadSet").GetValue(playerAvatar))
+                return;
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Extra Life");
+            if (upgradeItem == null)
+                return;
+            playerAvatar.Revive();
+            PlayerHealth playerHealth = playerAvatar.playerHealth;
+            playerHealth.HealOther(
+                (int)AccessTools.Field(typeof(PlayerHealth), "maxHealth").GetValue(playerHealth) - 1, false);
+            bool isMultiplayer = SemiFunc.IsMultiplayer();
+            float duration = upgradeItem.GetConfig<float>(
+                $"{(isMultiplayer ? "Multiplayer" : "Singleplayer")} Invincibility Timer");
+            if (!isMultiplayer)
+                SetInvincibleRPC(steamId, duration);
+            else
+                photonView.RPC("SetInvincibleRPC", RpcTarget.All, new object[] { steamId, duration });
+            upgradeItem.playerUpgrade.RemoveLevel(playerAvatar);
+        }
+
+        [PunRPC]
+        private void SetInvincibleRPC(string steamId, float duration)
+        {
+            PlayerAvatar playerAvatar = SemiFunc.PlayerAvatarGetFromSteamID(steamId);
+            if (playerAvatar == null ||
+                !(bool)AccessTools.Field(typeof(PlayerAvatar), "isDisabled").GetValue(playerAvatar) ||
+                !(bool)AccessTools.Field(typeof(PlayerAvatar), "deadSet").GetValue(playerAvatar))
+                return;
+            playerAvatar.playerHealth.InvincibleSet(duration);
         }
     }
 }
