@@ -13,40 +13,25 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null || __instance == PlayerController.instance.playerAvatarScript)
                 return;
-            Plugin.instance.AddPlayerToMap(__instance);
+            Plugin.instance.RegisterToMap(__instance);
         }
 
         [HarmonyPatch("ReviveRPC")]
         [HarmonyPostfix]
         static void ReviveRPC(PlayerAvatar __instance)
         {
-            if (MoreUpgradesManager.instance == null || __instance == PlayerController.instance.playerAvatarScript)
+            if (MoreUpgradesManager.instance == null)
                 return;
-            Plugin.instance.AddPlayerToMap(__instance);
+            Plugin.instance.ShowToMap(__instance);
         }
 
         [HarmonyPatch("PlayerDeathRPC")]
         [HarmonyPostfix]
         static void PlayerDeathRPC(PlayerAvatar __instance)
         {
-            if (MoreUpgradesManager.instance == null || __instance == PlayerController.instance.playerAvatarScript)
+            if (MoreUpgradesManager.instance == null)
                 return;
-            Plugin.instance.RemovePlayerFromMap(__instance);
-            Plugin.instance.RemoveEnemyFromMap(__instance);
-        }
-
-        [HarmonyPatch("SetColorRPC")]
-        [HarmonyPostfix]
-        static void SetColorRPC(PlayerAvatar __instance)
-        {
-            if (MoreUpgradesManager.instance == null || __instance == PlayerController.instance.playerAvatarScript)
-                return;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
-            if (upgradeItem != null && upgradeItem.GetConfig<bool>("Player Color"))
-            {
-                Plugin.instance.RemovePlayerFromMap(__instance);
-                Plugin.instance.AddPlayerToMap(__instance);
-            }
+            Plugin.instance.HideFromMap(__instance);
         }
     }
 }

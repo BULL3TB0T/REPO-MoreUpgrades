@@ -102,12 +102,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\MapInfo.cs" />
     <Compile Include="Classes\MoreUpgradesManager.cs" />
     <Compile Include="Classes\UpgradeItem.cs" />
-    <Compile Include="Compatibility\CustomColor.cs" />
     <Compile Include="Compatibility\KeybindLib.cs" />
     <Compile Include="Compatibility\REPOLib.cs" />
-    <Compile Include="CustomColorsPatches\ModdedColorPlayerAvatarPatch.cs" />
     <Compile Include="Patches\ItemAttributesPatch.cs" />
     <Compile Include="Patches\MapPatch.cs" />
     <Compile Include="Patches\PhysGrabObjectImpactDetectorPatch.cs" />

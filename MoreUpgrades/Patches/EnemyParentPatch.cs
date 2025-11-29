@@ -6,13 +6,22 @@ namespace MoreUpgrades.Patches
     [HarmonyPatch(typeof(EnemyParent))]
     internal class EnemyParentPatch
     {
+        [HarmonyPatch("Setup")]
+        [HarmonyPostfix]
+        static void Setup(EnemyParent __instance)
+        {
+            if (MoreUpgradesManager.instance == null)
+                return;
+            Plugin.instance.RegisterToMap(__instance);
+        }
+
         [HarmonyPatch("SpawnRPC")]
         [HarmonyPostfix]
         static void SpawnRPC(EnemyParent __instance)
         {
             if (MoreUpgradesManager.instance == null)
                 return;
-            Plugin.instance.AddEnemyToMap(__instance);
+            Plugin.instance.ShowToMap(__instance);
         }
 
         [HarmonyPatch("DespawnRPC")]
@@ -21,7 +30,7 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null)
                 return;
-            Plugin.instance.RemoveEnemyFromMap(__instance);
+            Plugin.instance.HideFromMap(__instance);
         }
     }
 }

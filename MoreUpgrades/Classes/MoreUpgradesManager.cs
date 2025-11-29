@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Photon.Pun;
-using REPOLib.Modules;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
@@ -32,6 +31,7 @@ namespace MoreUpgrades.Classes
             foreach (UpgradeItem upgradeItem in Plugin.instance.upgradeItems)
                 upgradeItem.upgradeBase.onUpdate?.Invoke();
         }
+
         private void LateUpdate()
         {
             foreach (UpgradeItem upgradeItem in Plugin.instance.upgradeItems)
@@ -107,8 +107,9 @@ namespace MoreUpgrades.Classes
                 !(bool)AccessTools.Field(typeof(PlayerAvatar), "deadSet").GetValue(playerAvatar))
                 return;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Extra Life");
-            if (upgradeItem == null)
+            if (upgradeItem == null || upgradeItem.playerUpgrade.GetLevel(steamId) <= 0)
                 return;
+            upgradeItem.playerUpgrade.RemoveLevel(playerAvatar);
             playerAvatar.Revive();
             PlayerHealth playerHealth = playerAvatar.playerHealth;
             playerHealth.HealOther(
@@ -120,7 +121,6 @@ namespace MoreUpgrades.Classes
                 SetInvincibleRPC(steamId, duration);
             else
                 photonView.RPC("SetInvincibleRPC", RpcTarget.All, new object[] { steamId, duration });
-            upgradeItem.playerUpgrade.RemoveLevel(playerAvatar);
         }
 
         [PunRPC]

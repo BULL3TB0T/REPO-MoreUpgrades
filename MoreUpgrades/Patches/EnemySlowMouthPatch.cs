@@ -17,19 +17,13 @@ namespace MoreUpgrades.Patches
             EnemySlowMouth.State state = __instance.currentState;
             if (state == EnemySlowMouth.State.Attached)
             {
-                Plugin.instance.RemoveEnemyFromMap(enemyParent);
-                if (playerTarget == PlayerController.instance.playerAvatarScript)
-                    return;
-                Plugin.instance.RemovePlayerFromMap(playerTarget);
-                Plugin.instance.AddEnemyToMap(playerTarget, enemyParent.enemyName);
+                Plugin.instance.HideFromMap(enemyParent);
+                Plugin.instance.SwapOnMap(enemyParent, playerTarget);
             }
             else if (state == EnemySlowMouth.State.Detach)
             {
-                Plugin.instance.AddEnemyToMap(enemyParent);
-                if (playerTarget == PlayerController.instance.playerAvatarScript)
-                    return;
-                Plugin.instance.AddPlayerToMap(playerTarget);
-                Plugin.instance.RemoveEnemyFromMap(playerTarget, enemyParent.enemyName);
+                Plugin.instance.SwapOnMap(playerTarget, enemyParent);
+                Plugin.instance.ShowToMap(enemyParent);
             }
         }
     }

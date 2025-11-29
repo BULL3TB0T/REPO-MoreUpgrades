@@ -12,7 +12,7 @@ namespace MoreUpgrades.Patches
         {
             if (MoreUpgradesManager.instance == null)
                 return;
-            Plugin.instance.RemoveEnemyFromMap((EnemyParent)AccessTools.Field(typeof(Enemy), "EnemyParent").GetValue(___enemy));
+            Plugin.instance.HideFromMap((EnemyParent)AccessTools.Field(typeof(Enemy), "EnemyParent").GetValue(___enemy));
         }
     }
 }

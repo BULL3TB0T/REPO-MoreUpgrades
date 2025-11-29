@@ -14,15 +14,14 @@ using UnityEngine.SceneManagement;
 
 namespace MoreUpgrades
 {
-    [BepInDependency(Compatibility.REPOLib.modGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(Compatibility.KeybindLib.modGUID, BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency(Compatibility.CustomColors.modGUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(Compatibility.REPOLib.modGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInPlugin(modGUID, modName, modVer)]
     internal class Plugin : BaseUnityPlugin
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.5.8";
+        private const string modVer = "1.5.9";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
@@ -34,6 +33,8 @@ namespace MoreUpgrades
         internal AssetBundle assetBundle;
         internal List<UpgradeItem> upgradeItems;
 
+        internal bool updateTracker;
+
         private void PatchAll(string name)
         {
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.Namespace == $"MoreUpgrades.{name}"))
@@ -43,7 +44,7 @@ namespace MoreUpgrades
         private GameObject GetVisualsFromComponent(Component component)
         {
             GameObject visuals = null;
-            if (component.GetType() == typeof(EnemyParent))
+            if (component is EnemyParent)
             {
                 EnemyParent enemyParent = component as EnemyParent;
                 Enemy enemy = (Enemy)AccessTools.Field(typeof(EnemyParent), "Enemy").GetValue(component);
@@ -68,7 +69,7 @@ namespace MoreUpgrades
                 if (visuals == null)
                     visuals = enemy.gameObject;
             }
-            else if (component.GetType() == typeof(PlayerAvatar))
+            else if (component is PlayerAvatar)
             {
                 PlayerAvatar playerAvatar = component as PlayerAvatar;
                 visuals = playerAvatar.playerAvatarVisuals.gameObject;
@@ -76,77 +77,143 @@ namespace MoreUpgrades
             return visuals;
         }
 
-        internal void AddEnemyToMap(Component component, string enemyName = null)
+        internal void RegisterToMap(Component component)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
-            if (upgradeItem == null)
-                return;
-            if (component is EnemyParent enemyParent && enemyName == null)
-                enemyName = enemyParent.enemyName;
-            if (upgradeItem.GetConfig<string>("Exclude Enemies").Split(',').Select(x => x.Trim())
-                .Where(x => !string.IsNullOrEmpty(x)).Contains(enemyName))
+            if (Map.Instance == null)
                 return;
             GameObject visuals = GetVisualsFromComponent(component);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
-            if (visuals == null || addToMap.Any(x => x.Item1 == visuals))
+            if (visuals == null)
                 return;
-            if (removeFromMap.Contains(visuals))
-                removeFromMap.Remove(visuals);
-            addToMap.Add((visuals, upgradeItem.GetConfig<Color>("Color")));
-        }
-
-        internal void RemoveEnemyFromMap(Component component, string enemyName = null)
-        {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
+            string upgradeItemName = null;
+            if (component is EnemyParent)
+                upgradeItemName = "Map Enemy Tracker";
+            else if (component is PlayerAvatar)
+                upgradeItemName = "Map Player Tracker";
+            else
+                return;
+            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == upgradeItemName);
             if (upgradeItem == null)
                 return;
-            if (component is EnemyParent enemyParent && enemyName == null)
-                enemyName = enemyParent.enemyName;
-            if (upgradeItem.GetConfig<string>("Exclude Enemies").Split(',').Select(x => x.Trim())
-                .Where(x => !string.IsNullOrEmpty(x)).Contains(enemyName))
+            List<MapInfo> mapInfos = upgradeItem.GetVariable<List<MapInfo>>("Map Infos");
+            if (mapInfos.Any(x => x.component == component))
                 return;
-            GameObject visuals = GetVisualsFromComponent(component);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
-            if (visuals == null || removeFromMap.Contains(visuals))
-                return;
-            if (addToMap.Any(x => x.Item1 == visuals))
-                addToMap.RemoveAll(x => x.Item1 == visuals);
-            removeFromMap.Add(visuals);
+            GameObject mapObject = Instantiate(Map.Instance.CustomObject, Map.Instance.OverLayerParent);
+            mapObject.name = visuals.name;
+            MapCustomEntity mapCustomEntity = mapObject.GetComponent<MapCustomEntity>();
+            mapCustomEntity.Parent = visuals.transform;
+            mapInfos.Add(new MapInfo()
+            {
+                component = component,
+                mapCustomEntity = mapCustomEntity
+            });
+            updateTracker = true;
         }
 
-        internal void AddPlayerToMap(PlayerAvatar playerAvatar)
+        internal void ShowToMap(Component component)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
-            if (upgradeItem == null)
+            UpgradeItem mapEnemyTracker = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
+            UpgradeItem mapPlayerTracker = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
+            if (mapEnemyTracker == null && mapPlayerTracker == null)
                 return;
-            GameObject visuals = GetVisualsFromComponent(playerAvatar);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
-            if (visuals == null || addToMap.Any(x => x.Item1 == visuals))
+            List<MapInfo> enemyMapInfos = mapEnemyTracker?.GetVariable<List<MapInfo>>("Map Infos");
+            List<MapInfo> playerMapInfos = mapPlayerTracker?.GetVariable<List<MapInfo>>("Map Infos");
+            if (enemyMapInfos == null && playerMapInfos == null)
                 return;
-            if (removeFromMap.Contains(visuals))
-                removeFromMap.Remove(visuals);
-            Color color = upgradeItem.GetConfig<Color>("Color");
-            if (upgradeItem.GetConfig<bool>("Player Color"))
-                color = (Color)AccessTools.Field(typeof(PlayerAvatarVisuals), "color").GetValue(playerAvatar.playerAvatarVisuals);
-            addToMap.Add((visuals, color));
+            MapInfo mapInfo = enemyMapInfos?.FirstOrDefault(x => x.component == component) ??
+                playerMapInfos?.FirstOrDefault(x => x.component == component);
+            if (mapInfo == null)
+                return;
+            bool isEnemy = component is EnemyParent;
+            bool isPlayer = component is PlayerAvatar;
+            if (!isEnemy && !isPlayer)
+                return;
+            if (isEnemy)
+            {
+                EnemyParent enemyParent = component as EnemyParent;
+                if (mapEnemyTracker.GetConfig<string>("Exclude Enemies").Split(',').Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrEmpty(x)).Contains(enemyParent.enemyName))
+                    return;
+            }
+            mapInfo.visible = true;
+            updateTracker = true;
         }
 
-        internal void RemovePlayerFromMap(PlayerAvatar playerAvatar)
+        internal void HideFromMap(Component component)
         {
-            UpgradeItem upgradeItem = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
-            if (upgradeItem == null)
+            UpgradeItem mapEnemyTracker = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
+            UpgradeItem mapPlayerTracker = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
+            if (mapEnemyTracker == null && mapPlayerTracker == null)
                 return;
-            GameObject visuals = GetVisualsFromComponent(playerAvatar);
-            List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
-            List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
-            if (visuals == null || removeFromMap.Contains(visuals))
+            List<MapInfo> enemyMapInfos = mapEnemyTracker?.GetVariable<List<MapInfo>>("Map Infos");
+            List<MapInfo> playerMapInfos = mapPlayerTracker?.GetVariable<List<MapInfo>>("Map Infos");
+            if (enemyMapInfos == null && playerMapInfos == null)
                 return;
-            if (addToMap.Any(x => x.Item1 == visuals))
-                addToMap.RemoveAll(x => x.Item1 == visuals);
-            removeFromMap.Add(visuals);
+            MapInfo mapInfo = enemyMapInfos?.FirstOrDefault(x => x.component == component) ??
+                playerMapInfos?.FirstOrDefault(x => x.component == component);
+            if (mapInfo == null)
+                return;
+            bool isEnemy = component is EnemyParent;
+            bool isPlayer = component is PlayerAvatar;
+            if (!isEnemy && !isPlayer)
+                return;
+            if (isEnemy)
+            {
+                EnemyParent enemyParent = component as EnemyParent;
+                if (mapEnemyTracker.GetConfig<string>("Exclude Enemies").Split(',').Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrEmpty(x)).Contains(enemyParent.enemyName))
+                    return;
+            }
+            mapInfo.visible = false;
+            updateTracker = true;
+        }
+
+        internal void SwapOnMap(Component component, Component fromComponent)
+        {
+            UpgradeItem mapEnemyTracker = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Enemy Tracker");
+            UpgradeItem mapPlayerTracker = upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Player Tracker");
+            if (mapEnemyTracker == null || mapPlayerTracker == null)
+                return;
+            List<MapInfo> enemyMapInfos = mapEnemyTracker.GetVariable<List<MapInfo>>("Map Infos");
+            List<MapInfo> playerMapInfos = mapPlayerTracker.GetVariable<List<MapInfo>>("Map Infos");
+            if (enemyMapInfos == null || playerMapInfos == null)
+                return;
+            MapInfo mapInfo = enemyMapInfos.FirstOrDefault(x => x.component == component) ??
+                playerMapInfos.FirstOrDefault(x => x.component == component);
+            MapInfo fromMapInfo = enemyMapInfos.FirstOrDefault(x => x.component == fromComponent) ??
+                playerMapInfos.FirstOrDefault(x => x.component == fromComponent);
+            if (mapInfo == null || fromMapInfo == null)
+                return;
+            bool componentValid = component is PlayerAvatar || component is EnemyParent;
+            bool fromComponentValid = fromComponent is PlayerAvatar || fromComponent is EnemyParent;
+            if (!componentValid || !fromComponentValid)
+                return;
+            if (component is EnemyParent || fromComponent is EnemyParent)
+            {
+                List<string> enemyNames = new List<string>();
+                if (component is EnemyParent enemyParent)
+                    enemyNames.Add(enemyParent.enemyName);
+                if (fromComponent is EnemyParent fromEnemyParent)
+                    enemyNames.Add(fromEnemyParent.enemyName);
+                if (enemyNames.Any(x => 
+                    mapEnemyTracker.GetConfig<string>("Exclude Enemies").Split(',').Select(y => y.Trim())
+                    .Where(y => !string.IsNullOrEmpty(y)).Contains(x)))
+                    return;
+            }
+            if (enemyMapInfos.Contains(mapInfo) && playerMapInfos.Contains(fromMapInfo))
+            {
+                enemyMapInfos.Remove(mapInfo);
+                enemyMapInfos.Add(fromMapInfo);
+                playerMapInfos.Remove(fromMapInfo);
+                playerMapInfos.Add(mapInfo);
+            }
+            else if (enemyMapInfos.Contains(fromMapInfo) && playerMapInfos.Contains(mapInfo))
+            {
+                enemyMapInfos.Remove(fromMapInfo);
+                enemyMapInfos.Add(mapInfo);
+                playerMapInfos.Remove(mapInfo);
+                playerMapInfos.Add(fromMapInfo);
+            }
+            updateTracker = true;
         }
 
         private static float ItemValueMultiplier(float itemValueMultiplier, Item item)
@@ -226,7 +293,8 @@ namespace MoreUpgrades
                 if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop())
                     return;
                 PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
-                if (MissionUI.instance != null && playerAvatar != null && valuableCount.playerUpgrade.GetLevel(playerAvatar) > 0)
+                if (MissionUI.instance != null && playerAvatar != null && 
+                    valuableCount.playerUpgrade.GetLevel(playerAvatar) > 0)
                 {
                     TextMeshProUGUI missionText = 
                         (TextMeshProUGUI)AccessTools.Field(typeof(MissionUI), "Text").GetValue(MissionUI.instance);
@@ -244,7 +312,8 @@ namespace MoreUpgrades
                     {
                         return (int)((float)AccessTools.Field(typeof(ValuableObject), "dollarValueCurrent").GetValue(x));
                     }).Sum() : 0;
-                    if (!missionText.text.IsNullOrWhiteSpace() && (changed || previousCount != count || previousValue != value))
+                    if (!string.IsNullOrEmpty(missionText.text) && 
+                        (changed || previousCount != count || previousValue != value))
                     {
                         string text = missionText.text;
                         if (!changed && (previousCount != count || previousValue != value))
@@ -269,37 +338,43 @@ namespace MoreUpgrades
             valuableCount.AddConfig("Ignore Money Bags", false,
                 "Whether to ignore the money bags from the extraction points.");
             upgradeItems.Add(valuableCount);
+            Sprite mapTracker = assetBundle.LoadAsset<Sprite>("Map Tracker");
+            float trackerDelay = 0.2f;
             void UpdateTracker(UpgradeItem upgradeItem)
             {
                 PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
-                if (playerAvatar != null && upgradeItem.playerUpgrade.GetLevel(playerAvatar) > 0)
+                if (playerAvatar != null)
                 {
-                    List<(GameObject, Color)> addToMap = upgradeItem.GetVariable<List<(GameObject, Color)>>("Add To Map");
-                    for (int i = addToMap.Count - 1; i >= 0; i--)
+                    bool hasUpgrade = upgradeItem.playerUpgrade.GetLevel(playerAvatar) > 0;
+                    List<MapInfo> mapInfos = upgradeItem.GetVariable<List<MapInfo>>("Map Infos");
+                    foreach (MapInfo mapInfo in mapInfos)
                     {
-                        (GameObject gameObject, Color color) = addToMap[i];
-                        addToMap.RemoveAt(i);
-                        MapCustom mapCustom = gameObject.GetComponent<MapCustom>();
-                        if (mapCustom != null)
-                            continue;
-                        mapCustom = gameObject.AddComponent<MapCustom>();
-                        mapCustom.color = color;
-                        mapCustom.sprite = upgradeItem.GetConfig<bool>("Arrow Icon") ? 
-                            assetBundle.LoadAsset<Sprite>("Map Tracker") :
-                            playerAvatar.playerDeathHead.mapCustom.sprite;
-                    }
-                    List<GameObject> removeFromMap = upgradeItem.GetVariable<List<GameObject>>("Remove From Map");
-                    for (int i = removeFromMap.Count - 1; i >= 0; i--)
-                    {
-                        GameObject gameObject = removeFromMap[i];
-                        removeFromMap.RemoveAt(i);
-                        MapCustom mapCustom = gameObject.GetComponent<MapCustom>();
-                        if (mapCustom == null)
-                            continue;
-                        Destroy(mapCustom.mapCustomEntity.gameObject);
-                        Destroy(mapCustom);
+                        MapCustomEntity mapCustomEntity = mapInfo.mapCustomEntity;
+                        SpriteRenderer spriteRenderer = mapCustomEntity.spriteRenderer;
+                        if (hasUpgrade)
+                        {
+                            Transform parent = mapCustomEntity.Parent;
+                            if (Map.Instance.Active)
+                                Map.Instance.CustomPositionSet(mapCustomEntity.transform, parent);
+                            spriteRenderer.sprite = upgradeItem.GetConfig<bool>("Arrow Icon") ? mapTracker :
+                                playerAvatar.playerDeathHead.mapCustom.sprite;
+                            Color color = upgradeItem.GetConfig<Color>("Color");
+                            if (upgradeItem.upgradeBase.name == "Map Player Tracker" &&
+                                upgradeItem.GetConfig<bool>("Player Color"))
+                                color =
+                                    (Color)AccessTools.Field(typeof(PlayerAvatarVisuals),
+                                        "color").GetValue(playerAvatar.playerAvatarVisuals);
+                            MapLayer layerParent = Map.Instance.GetLayerParent(parent.position.y + 1f);
+                            if (layerParent.layer == Map.Instance.PlayerLayer)
+                                color.a = 1f;
+                            else
+                                color.a = 0.3f;
+                            spriteRenderer.color = color;
+                        }
+                        spriteRenderer.enabled = hasUpgrade && mapInfo.visible;
                     }
                 }
+                updateTracker = false;
             };
             UpgradeItem.Base mapEnemyTrackerBase = new UpgradeItem.Base
             {
@@ -312,14 +387,12 @@ namespace MoreUpgrades
             UpgradeItem mapEnemyTracker = null;
             mapEnemyTrackerBase.onVariablesStart += delegate
             {
-                mapEnemyTracker.AddVariable("Add To Map", new List<(GameObject, Color)>());
-                mapEnemyTracker.AddVariable("Remove From Map", new List<GameObject>());
+                mapEnemyTracker.AddVariable("Map Infos", new List<MapInfo>());
             };
             mapEnemyTrackerBase.onUpdate += delegate
             {
-                if (SemiFunc.RunIsLobby() || SemiFunc.RunIsShop())
-                    return;
-                UpdateTracker(mapEnemyTracker);
+                if (updateTracker || Time.time % trackerDelay < Time.deltaTime)
+                    UpdateTracker(mapEnemyTracker);
             };
             mapEnemyTracker = new UpgradeItem(mapEnemyTrackerBase);
             mapEnemyTracker.AddConfig("Arrow Icon", true, 
@@ -340,12 +413,12 @@ namespace MoreUpgrades
             UpgradeItem mapPlayerTracker = null;
             mapPlayerTrackerBase.onVariablesStart += delegate
             {
-                mapPlayerTracker.AddVariable("Add To Map", new List<(GameObject, Color)>());
-                mapPlayerTracker.AddVariable("Remove From Map", new List<GameObject>());
+                mapPlayerTracker.AddVariable("Map Infos", new List<MapInfo>());
             };
             mapPlayerTrackerBase.onUpdate += delegate
             {
-                UpdateTracker(mapPlayerTracker);
+                if (updateTracker || Time.time % trackerDelay < Time.deltaTime)
+                    UpdateTracker(mapPlayerTracker);
             };
             mapPlayerTracker = new UpgradeItem(mapPlayerTrackerBase);
             mapPlayerTracker.AddConfig("Arrow Icon", true, 
@@ -454,8 +527,6 @@ namespace MoreUpgrades
             logger.LogMessage($"{modName} has started.");
             PatchAll("Patches");
             PatchAll("REPOLibPatches");
-            if (Compatibility.CustomColors.IsLoaded())
-                PatchAll("CustomColorsPatches");
         }
     }
 }
