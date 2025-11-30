@@ -43,11 +43,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\AppData\Roaming\r2modmanPlus-local\REPO\profiles\vanilla modded\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="CustomColors">
-      <HintPath>Dependencies\CustomColors.dll</HintPath>
-    </Reference>
-    <Reference Include="KeybindLib">
-      <HintPath>Dependencies\KeybindLib.dll</HintPath>
+    <Reference Include="KeybindLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>DLLs\KeybindLib.dll</HintPath>
     </Reference>
     <Reference Include="Photon3Unity3D, Version=4.1.8.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -61,8 +59,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\PhotonUnityNetworking.dll</HintPath>
     </Reference>
-    <Reference Include="REPOLib">
-      <HintPath>Dependencies\REPOLib.dll</HintPath>
+    <Reference Include="REPOLib, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>DLLs\REPOLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -103,6 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\MapInfo.cs" />
+    <Compile Include="Classes\MoreUpgradesAPI.cs" />
     <Compile Include="Classes\MoreUpgradesManager.cs" />
     <Compile Include="Classes\UpgradeItem.cs" />
     <Compile Include="Compatibility\KeybindLib.cs" />

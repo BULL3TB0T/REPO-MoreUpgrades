@@ -27,6 +27,12 @@
 - **Allow Team Upgrades**: Whether the upgrade item applies to the entire team instead of just one player.
 - **Sync Host Upgrades**: Whether the host should sync the item upgrade for the entire team.
 - **Starting Amount**: The number of times the upgrade item is applied at the start of the game.
+## Library
+- I wish REPOLib would handle this globally so I don't have to make this mod a library again.
+```csharp
+float ItemValueMultiplier(Item item) // This is based on the "Price Multiplier" config entry. When under 0, it returns "ShopManager.instance.itemValueMultiplier"
+float UpgradeValueIncrease(Item item) // This is based on the "Price Increase Scaling" config entry. When under 0, it returns "ShopManager.instance.upgradeValueIncrease"
+```
 ## Note
 Some upgrade items have more configuration.
 Check the config file after updates, as values may change between versions.

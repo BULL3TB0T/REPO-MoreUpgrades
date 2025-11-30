@@ -35,8 +35,6 @@ namespace MoreUpgrades.Classes
         internal Dictionary<string, int> appliedPlayerDictionary;
         internal Dictionary<string, object> variables;
 
-        public bool HasConfig(string key) => configEntries.TryGetValue(key, out ConfigEntryBase _);
-
         public bool AddConfig<T>(string key, T defaultValue, string description = "")
         {
             if (configEntries.ContainsKey(key))
@@ -164,15 +162,13 @@ namespace MoreUpgrades.Classes
             string assetName = $"Modded Item Upgrade Player {upgradeBase.name}";
             item.name = assetName;
             item.itemName = $"{upgradeBase.name} Upgrade";
-            item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeBase.maxAmount;
-            item.maxAmountInShop = HasConfig("Max Amount In Shop") ? GetConfig<int>("Max Amount In Shop") :
-                upgradeBase.maxAmountInShop;
-            item.maxPurchaseAmount = HasConfig("Max Purchase Amount") ? GetConfig<int>("Max Purchase Amount") :
-                upgradeBase.maxPurchaseAmount;
+            item.maxAmount = GetConfig<int>("Max Amount");
+            item.maxAmountInShop = GetConfig<int>("Max Amount In Shop");
+            item.maxPurchaseAmount = GetConfig<int>("Max Purchase Amount");
             item.maxPurchase = item.maxPurchaseAmount > 0;
             Value value = ScriptableObject.CreateInstance<Value>();
-            value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeBase.minPrice;
-            value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeBase.maxPrice;
+            value.valueMin = GetConfig<float>("Minimum Price");
+            value.valueMax = GetConfig<float>("Maximum Price");
             item.value = value;
             GameObject prefab = Plugin.instance.assetBundle.LoadAsset<GameObject>(upgradeBase.name);
             prefab.name = assetName;
@@ -200,14 +196,12 @@ namespace MoreUpgrades.Classes
             sectionName = $"{upgradeBase.name} ({Compatibility.REPOLib.modGUID})";
             appliedPlayerDictionary = new Dictionary<string, int>();
             SetupConfig();
-            item.maxAmount = HasConfig("Max Amount") ? GetConfig<int>("Max Amount") : upgradeBase.maxAmount;
-            item.maxAmountInShop = HasConfig("Max Amount In Shop") ? GetConfig<int>("Max Amount In Shop") : 
-                upgradeBase.maxAmountInShop;
-            item.maxPurchaseAmount = HasConfig("Max Purchase Amount") ? GetConfig<int>("Max Purchase Amount") : 
-                upgradeBase.maxPurchaseAmount;
+            item.maxAmount = GetConfig<int>("Max Amount");
+            item.maxAmountInShop = GetConfig<int>("Max Amount In Shop");
+            item.maxPurchaseAmount = GetConfig<int>("Max Purchase Amount");
             item.maxPurchase = item.maxPurchaseAmount > 0;
-            item.value.valueMin = HasConfig("Minimum Price") ? GetConfig<float>("Minimum Price") : upgradeBase.minPrice;
-            item.value.valueMax = HasConfig("Maximum Price") ? GetConfig<float>("Maximum Price") : upgradeBase.maxPrice;
+            item.value.valueMin = GetConfig<float>("Minimum Price");
+            item.value.valueMax = GetConfig<float>("Maximum Price");
             this.playerUpgrade = playerUpgrade;
         }
     }

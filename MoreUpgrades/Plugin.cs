@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.6.0";
+        private const string modVer = "1.6.1";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
@@ -214,20 +214,6 @@ namespace MoreUpgrades
                 playerMapInfos.Add(fromMapInfo);
             }
             updateTracker = true;
-        }
-
-        private static float ItemValueMultiplier(float itemValueMultiplier, Item item)
-        {
-            if (MoreUpgradesManager.instance == null)
-                return itemValueMultiplier;
-            UpgradeItem upgradeItem = instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
-            if (upgradeItem == null)
-                return itemValueMultiplier;
-            float value = upgradeItem.HasConfig("Price Multiplier") ? upgradeItem.GetConfig<float>("Price Multiplier") :
-                itemValueMultiplier;
-            if (value < 0)
-                value = itemValueMultiplier;
-            return value;
         }
         
         void Awake()
@@ -501,7 +487,7 @@ namespace MoreUpgrades
             Keybind reviveKeybind = Keybinds.Bind("Revive", "<Keyboard>/r");
             extraLifeBase.onUpdate += delegate
             {
-                if (MoreUpgradesManager.instance == null)
+                if (MoreUpgradesManager.instance == null || !SemiFunc.NoTextInputsActive())
                     return;
                 PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
                 if (playerAvatar == null)

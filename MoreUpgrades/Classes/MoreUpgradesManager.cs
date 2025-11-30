@@ -44,24 +44,21 @@ namespace MoreUpgrades.Classes
             {
                 if (checkPlayerUpgrades)
                 {
-                    if (upgradeItem.HasConfig("Starting Amount"))
+                    int amount = upgradeItem.GetConfig<int>("Starting Amount");
+                    if (amount >= 0)
                     {
-                        int amount = upgradeItem.GetConfig<int>("Starting Amount");
-                        if (amount >= 0)
+                        foreach (PlayerAvatar playerAvatar in SemiFunc.PlayerGetAll())
                         {
-                            foreach (PlayerAvatar playerAvatar in SemiFunc.PlayerGetAll())
-                            {
-                                string steamId = SemiFunc.PlayerGetSteamID(playerAvatar);
-                                if (!upgradeItem.appliedPlayerDictionary.ContainsKey(steamId))
-                                    upgradeItem.appliedPlayerDictionary[steamId] = 0;
-                                if (upgradeItem.appliedPlayerDictionary[steamId] == amount)
-                                    continue;
-                                upgradeItem.playerUpgrade.SetLevel(playerAvatar, amount);
-                                upgradeItem.appliedPlayerDictionary[steamId] = amount;
-                            }
+                            string steamId = SemiFunc.PlayerGetSteamID(playerAvatar);
+                            if (!upgradeItem.appliedPlayerDictionary.ContainsKey(steamId))
+                                upgradeItem.appliedPlayerDictionary[steamId] = 0;
+                            if (upgradeItem.appliedPlayerDictionary[steamId] == amount)
+                                continue;
+                            upgradeItem.playerUpgrade.SetLevel(playerAvatar, amount);
+                            upgradeItem.appliedPlayerDictionary[steamId] = amount;
                         }
                     }
-                    if (upgradeItem.HasConfig("Sync Host Upgrades") && upgradeItem.GetConfig<bool>("Sync Host Upgrades"))
+                    if (upgradeItem.GetConfig<bool>("Sync Host Upgrades"))
                     {
                         PlayerAvatar localPlayerAvatar = SemiFunc.PlayerAvatarLocal();
                         int hostAmount = upgradeItem.playerUpgrade.GetLevel(localPlayerAvatar);

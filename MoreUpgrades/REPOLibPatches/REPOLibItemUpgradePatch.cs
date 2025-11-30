@@ -32,8 +32,7 @@ namespace MoreUpgrades.REPOLibPatches
             {
                 UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x =>
                     x.playerUpgrade.Item == playerUpgrade.Item);
-                if (upgradeItem != null && upgradeItem.HasConfig("Allow Team Upgrades") && 
-                    upgradeItem.GetConfig<bool>("Allow Team Upgrades"))
+                if (upgradeItem != null && upgradeItem.GetConfig<bool>("Allow Team Upgrades"))
                 {
                     foreach (PlayerAvatar currentPlayerAvatar in SemiFunc.PlayerGetAll())
                         playerUpgrade.AddLevel(currentPlayerAvatar, amount);

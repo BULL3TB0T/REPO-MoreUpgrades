@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MoreUpgrades.Classes;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
@@ -12,15 +13,15 @@ namespace MoreUpgrades.Patches
         static IEnumerable<CodeInstruction> GetValueTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
-            matcher.MatchForward(true,
+            matcher.MatchForward(false,
                 new CodeMatch(OpCodes.Ldsfld, AccessTools.Field(typeof(ShopManager), "instance")),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "itemValueMultiplier"))
             );
-            matcher.Advance(1);
+            matcher.RemoveInstructions(2);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemAttributes), "item")),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Plugin), "ItemValueMultiplier"))
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MoreUpgradesAPI), "ItemValueMultiplier"))
             );
             return matcher.InstructionEnumeration();
         }

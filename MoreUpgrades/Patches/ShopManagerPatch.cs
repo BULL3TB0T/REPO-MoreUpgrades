@@ -11,7 +11,8 @@ namespace MoreUpgrades.Patches
     {
         [HarmonyPatch("GetAllItemsFromStatsManager")]
         [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> GetAllItemsFromStatsManagerTranspiler(IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<CodeInstruction> GetAllItemsFromStatsManagerTranspiler(
+            IEnumerable<CodeInstruction> instructions)
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
             matcher.MatchForward(false, 
@@ -29,17 +30,18 @@ namespace MoreUpgrades.Patches
             matcher.Advance(1);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldloc_1),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ShopManagerPatch), "GetAllItemsFromStatsManager")),
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ShopManagerPatch), 
+                    "GetAllItemsFromStatsManager")),
                 new CodeInstruction(OpCodes.Brtrue, brLabel)
             );
             matcher.MatchForward(true,
                 new CodeMatch(OpCodes.Ldarg_0),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "itemValueMultiplier"))
             );
-            matcher.Advance(1);
+            matcher.RemoveInstructions(2);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldloc_1),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Plugin), "ItemValueMultiplier"))
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MoreUpgradesAPI), "ItemValueMultiplier"))
             );
             return matcher.InstructionEnumeration();
         }
@@ -49,7 +51,7 @@ namespace MoreUpgrades.Patches
             if (MoreUpgradesManager.instance == null)
                 return false;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
-            return upgradeItem != null && upgradeItem.HasConfig("Enabled") && !upgradeItem.GetConfig<bool>("Enabled");
+            return upgradeItem != null && !upgradeItem.GetConfig<bool>("Enabled");
         }
 
         [HarmonyPatch("UpgradeValueGet")]
@@ -57,30 +59,16 @@ namespace MoreUpgrades.Patches
         static IEnumerable<CodeInstruction> UpgradeValueGetTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
-            matcher.MatchForward(true,
+            matcher.MatchForward(false,
                 new CodeMatch(OpCodes.Ldarg_0),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "upgradeValueIncrease"))
             );
-            matcher.Advance(1);
+            matcher.RemoveInstructions(2);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldarg_2),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ShopManagerPatch), "UpgradeValueIncrease"))
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MoreUpgradesAPI), "UpgradeValueIncrease"))
             );
             return matcher.InstructionEnumeration();
-        }
-
-        internal static float UpgradeValueIncrease(float upgradeValueIncrease, Item item)
-        {
-            if (MoreUpgradesManager.instance == null)
-                return upgradeValueIncrease;
-            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
-            if (upgradeItem == null)
-                return upgradeValueIncrease;
-            float value = upgradeItem.HasConfig("Price Increase Scaling") ? 
-                upgradeItem.GetConfig<float>("Price Increase Scaling") : upgradeItem.upgradeBase.priceIncreaseScaling;
-            if (value < 0)
-                value = upgradeValueIncrease;
-            return value;
         }
     }
 }
