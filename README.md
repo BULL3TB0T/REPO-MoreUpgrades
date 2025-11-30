@@ -11,7 +11,7 @@
 - **Map Zoom**: Decreases the zoom level of the map radar. *Can be upgraded twice unless you have a mod that spawns them in a level*.
 - **Autoscan**: Automatically scans for items within a given range. *Can be upgraded three times unless you have a mod that spawns them in a level*.
 - **Item Value**: Increases item value globally during level generation. *Can be upgraded multiple times*.
-- **Extra Life**: Makes you able to revive by pressing the Tumble keybind while being dead. *Can be upgraded multiple times, but when used, the upgrade count decreases*.
+- **Extra Life**: Makes you able to revive by pressing the Revive keybind (Registered by [KeybindLib mod](https://thunderstore.io/c/repo/p/BULLETBOT/KeybindLib)) while being dead. *Can be upgraded multiple times, but when used, the upgrade count decreases*.
 ## REPOLib Configuration
 - **Import Upgrades**: Whether to import the upgrades from [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib).
 - **Exclude Upgrade IDs**: Exclude specific [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib) upgrades by listing their IDs, seperated by commas.
