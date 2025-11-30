@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.6.1";
+        private const string modVer = "1.6.2";
 
         internal static Plugin instance;
         internal ManualLogSource logger;
@@ -487,10 +487,8 @@ namespace MoreUpgrades
             Keybind reviveKeybind = Keybinds.Bind("Revive", "<Keyboard>/r");
             extraLifeBase.onUpdate += delegate
             {
-                if (MoreUpgradesManager.instance == null || !SemiFunc.NoTextInputsActive())
-                    return;
                 PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
-                if (playerAvatar == null)
+                if (playerAvatar == null || !SemiFunc.NoTextInputsActive())
                     return;
                 if (InputManager.instance.KeyUp(reviveKeybind.inputKey))
                     MoreUpgradesManager.instance.Revive(playerAvatar);

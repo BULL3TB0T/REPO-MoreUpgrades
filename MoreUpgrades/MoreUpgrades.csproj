@@ -43,8 +43,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\AppData\Roaming\r2modmanPlus-local\REPO\profiles\vanilla modded\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="KeybindLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="KeybindLib">
       <HintPath>DLLs\KeybindLib.dll</HintPath>
     </Reference>
     <Reference Include="Photon3Unity3D, Version=4.1.8.0, Culture=neutral, processorArchitecture=MSIL">
@@ -59,8 +58,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\PhotonUnityNetworking.dll</HintPath>
     </Reference>
-    <Reference Include="REPOLib, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="REPOLib">
       <HintPath>DLLs\REPOLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />

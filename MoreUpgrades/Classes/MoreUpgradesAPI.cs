@@ -7,7 +7,8 @@ namespace MoreUpgrades.Classes
     {
         public static float ItemValueMultiplier(Item item)
         {
-            float defaultValue = (float)AccessTools.Field(typeof(ShopManager), "itemValueMultiplier").GetValue(null);
+            float defaultValue = 
+                (float)AccessTools.Field(typeof(ShopManager), "itemValueMultiplier").GetValue(ShopManager.instance);
             if (MoreUpgradesManager.instance == null)
                 return defaultValue;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
@@ -21,7 +22,8 @@ namespace MoreUpgrades.Classes
 
         public static float UpgradeValueIncrease(Item item)
         {
-            float defaultValue = (float)AccessTools.Field(typeof(ShopManager), "upgradeValueIncrease").GetValue(null);
+            float defaultValue = 
+                (float)AccessTools.Field(typeof(ShopManager), "upgradeValueIncrease").GetValue(ShopManager.instance);
             if (MoreUpgradesManager.instance == null)
                 return defaultValue;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
