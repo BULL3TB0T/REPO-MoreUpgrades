@@ -59,11 +59,13 @@ namespace MoreUpgrades.Patches
         static IEnumerable<CodeInstruction> UpgradeValueGetTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
-            matcher.MatchForward(false,
+            CodeMatch[] codeMatches = new CodeMatch[]
+            {
                 new CodeMatch(OpCodes.Ldarg_0),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "upgradeValueIncrease"))
-            );
-            matcher.RemoveInstructions(2);
+            };
+            matcher.MatchForward(false, codeMatches);
+            matcher.RemoveInstructions(codeMatches.Length);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldarg_2),
                 new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MoreUpgradesAPI), "UpgradeValueIncrease"))

@@ -21,19 +21,19 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.6.2";
+        private const string modVer = "1.6.3";
 
         internal static Plugin instance;
-        internal ManualLogSource logger;
+        public ManualLogSource logger;
         private readonly Harmony harmony = new Harmony(modGUID);
 
-        internal ConfigEntry<bool> importUpgrades;
-        internal ConfigEntry<string> excludeUpgradeIds;
+        public ConfigEntry<bool> importUpgrades;
+        public ConfigEntry<string> excludeUpgradeIds;
 
-        internal AssetBundle assetBundle;
-        internal List<UpgradeItem> upgradeItems;
+        public AssetBundle assetBundle;
+        public List<UpgradeItem> upgradeItems;
 
-        internal bool updateTracker;
+        public bool updateTracker;
 
         private void PatchAll(string name)
         {

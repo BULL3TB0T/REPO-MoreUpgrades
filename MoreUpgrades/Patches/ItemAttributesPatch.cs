@@ -13,11 +13,13 @@ namespace MoreUpgrades.Patches
         static IEnumerable<CodeInstruction> GetValueTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
-            matcher.MatchForward(false,
+            CodeMatch[] codeMatches = new CodeMatch[]
+            {
                 new CodeMatch(OpCodes.Ldsfld, AccessTools.Field(typeof(ShopManager), "instance")),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ShopManager), "itemValueMultiplier"))
-            );
-            matcher.RemoveInstructions(2);
+            };
+            matcher.MatchForward(false, codeMatches);
+            matcher.RemoveInstructions(codeMatches.Length);
             matcher.Insert(
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemAttributes), "item")),
