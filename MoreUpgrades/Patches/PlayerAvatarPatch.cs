@@ -14,6 +14,7 @@ namespace MoreUpgrades.Patches
             if (MoreUpgradesManager.instance == null || __instance == PlayerController.instance.playerAvatarScript)
                 return;
             Plugin.instance.RegisterToMap(__instance);
+            Plugin.instance.ShowToMap(__instance);
         }
 
         [HarmonyPatch("ReviveRPC")]

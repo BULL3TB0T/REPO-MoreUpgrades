@@ -32,7 +32,7 @@ namespace MoreUpgrades.Patches
                 new CodeInstruction(OpCodes.Ldloc_1),
                 new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ShopManagerPatch), 
                     "GetAllItemsFromStatsManager")),
-                new CodeInstruction(OpCodes.Brtrue, brLabel)
+                new CodeInstruction(OpCodes.Brfalse, brLabel)
             );
             matcher.MatchForward(true,
                 new CodeMatch(OpCodes.Ldarg_0),
@@ -49,9 +49,9 @@ namespace MoreUpgrades.Patches
         static bool GetAllItemsFromStatsManager(Item item)
         {
             if (MoreUpgradesManager.instance == null)
-                return false;
+                return true;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.playerUpgrade.Item == item);
-            return upgradeItem != null && !upgradeItem.GetConfig<bool>("Enabled");
+            return upgradeItem != null && upgradeItem.GetConfig<bool>("Enabled");
         }
 
         [HarmonyPatch("UpgradeValueGet")]

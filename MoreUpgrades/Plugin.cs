@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.6.3";
+        private const string modVer = "1.6.4";
 
         internal static Plugin instance;
         public ManualLogSource logger;
@@ -35,11 +35,9 @@ namespace MoreUpgrades
 
         public bool updateTracker;
 
-        private void PatchAll(string name)
-        {
-            foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.Namespace == $"MoreUpgrades.{name}"))
-                harmony.PatchAll(type);
-        }
+        internal void PatchAll(string name) =>
+            Assembly.GetExecutingAssembly().GetTypes().Where(x =>
+                x.Namespace == $"{typeof(Plugin).Namespace}.{name}").ToList().ForEach(x => harmony.PatchAll(x));
 
         private GameObject GetVisualsFromComponent(Component component)
         {
@@ -510,7 +508,8 @@ namespace MoreUpgrades
             };
             logger.LogMessage($"{modName} has started.");
             PatchAll("Patches");
-            PatchAll("REPOLibPatches");
+            if (Compatibility.REPOLib.IsLoaded())
+                Compatibility.REPOLib.OnAwake();
         }
     }
 }

@@ -1,17 +1,18 @@
 # MoreUpgrades
 - Adds more upgrade items to the game.
-- All players need to have the same config! (**Note:** Some of them can be client-sided or server-sided.)
 - The upgrade item designs are made by "Kizzycocoa" (1277336819951730739)
+- All players need to have the same config! (**Note:** Some of them can be client-sided or server-sided.)
+- Some upgrade items have more configuration. Check the config file after updates, as values may change between versions.
 ## Upgrade Items
 - **Sprint Usage**: Makes you able to use less stamina while sprinting. *Can be upgraded multiple times*.
 - **Valuable Count**: Displays the number of valuables under the mission text. *Can be upgraded only once*.
 - **Map Enemy Tracker**: Tracks enemies in the map radar. *Can be upgraded only once*.
 - **Map Player Tracker**: Tracks players in the map radar. *Can be upgraded only once*.
-- **Item Resist**: Makes you able to withstand item hits easier. *Can be upgraded multiple times*. (***Credits to the [ItemResistUpgrade mod](https://thunderstore.io/c/repo/p/TopSandwich/ItemResistUpgrade) creator called "Top Sandwich" (109074579716087808).***)
+- **Item Resist**: Makes you able to withstand item hits easier. *Can be upgraded multiple times*. (***Credits to the [ItemResistUpgrade](https://thunderstore.io/c/repo/p/TopSandwich/ItemResistUpgrade) mod creator called "Top Sandwich" (109074579716087808).***)
 - **Map Zoom**: Decreases the zoom level of the map radar. *Can be upgraded twice unless you have a mod that spawns them in a level*.
 - **Autoscan**: Automatically scans for items within a given range. *Can be upgraded three times unless you have a mod that spawns them in a level*.
 - **Item Value**: Increases item value globally during level generation. *Can be upgraded multiple times*.
-- **Extra Life**: Makes you able to revive by pressing the Revive keybind (Registered by [KeybindLib mod](https://thunderstore.io/c/repo/p/BULLETBOT/KeybindLib)) while being dead. *Can be upgraded multiple times, but when used, the upgrade count decreases*.
+- **Extra Life**: Makes you able to revive by pressing the Revive keybind (Using with [KeybindLib](https://thunderstore.io/c/repo/p/BULLETBOT/KeybindLib) mod) while being dead. *Can be upgraded multiple times, but when used, the upgrade count decreases*.
 ## REPOLib Configuration
 - **Import Upgrades**: Whether to import the upgrades from [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib).
 - **Exclude Upgrade IDs**: Exclude specific [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib) upgrades by listing their IDs, seperated by commas.
@@ -33,6 +34,3 @@
 float ItemValueMultiplier(Item item) // This is based on the "Price Multiplier" config entry. When under 0, it returns "ShopManager.instance.itemValueMultiplier"
 float UpgradeValueIncrease(Item item) // This is based on the "Price Increase Scaling" config entry. When under 0, it returns "ShopManager.instance.upgradeValueIncrease"
 ```
-## Note
-Some upgrade items have more configuration.
-Check the config file after updates, as values may change between versions.
