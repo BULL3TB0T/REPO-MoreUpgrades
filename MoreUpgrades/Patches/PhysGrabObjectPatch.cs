@@ -15,7 +15,8 @@ namespace MoreUpgrades.Patches
             if (MoreUpgradesManager.instance == null || !___isValuable)
                 return;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Item Resist");
-            if (upgradeItem == null)
+            if (upgradeItem == null || upgradeItem.GetConfig<string>("Exclude Valuables").Split(',').Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrEmpty(x)).Contains(__instance.name.Replace("(Clone)", "")))
                 return;
             if (___lastPlayerGrabbing != null)
             {
@@ -44,6 +45,18 @@ namespace MoreUpgrades.Patches
             List<ValuableObject> currentValuables = upgradeItem.GetVariable<List<ValuableObject>>("Current Valuables");
             if (currentValuables.Contains(valuableObject))
                 currentValuables.Remove(valuableObject);
+        }
+
+        [HarmonyPatch("GrabStarted")]
+        [HarmonyPostfix]
+        static void GrabStarted(PhysGrabObject __instance, bool ___grabbedLocal, bool ___isValuable)
+        {
+            if (MoreUpgradesManager.instance == null || !___grabbedLocal || !___isValuable)
+                return;
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Item Resist");
+            if (upgradeItem == null || !upgradeItem.GetConfig<bool>("Print Valuables"))
+                return;
+            Plugin.instance.logger.LogMessage("Grabbed Valuable Name: " + __instance.name.Replace("(Clone)", ""));
         }
     }
 }

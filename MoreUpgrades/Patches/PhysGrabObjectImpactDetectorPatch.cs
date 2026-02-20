@@ -17,7 +17,8 @@ namespace MoreUpgrades.Patches
             if (MoreUpgradesManager.instance == null || !___isValuable)
                 return;
             UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Item Resist");
-            if (upgradeItem == null)
+            if (upgradeItem == null || upgradeItem.GetConfig<string>("Exclude Valuables").Split(',').Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrEmpty(x)).Contains(___physGrabObject.name.Replace("(Clone)", "")))
                 return;
             List<PhysGrabber> playerGrabbing = ___physGrabObject.playerGrabbing;
             if (playerGrabbing != null && playerGrabbing.Count > 0)

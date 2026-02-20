@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.6.5";
+        private const string modVer = "1.6.6";
 
         internal static Plugin instance;
         public ManualLogSource logger;
@@ -426,6 +426,8 @@ namespace MoreUpgrades
             itemResist = new UpgradeItem(itemResistBase);
             itemResist.AddConfig("Scaling Factor", 0.9f,
                 "Formula: valueLost * (scalingFactor ^ upgradeLevel)");
+            itemResist.AddConfig("Print Valuables", false, "If enabled, the valuable name will be printed to the console that is being grabbed.");
+            itemResist.AddConfig("Exclude Valuables", "", "Exclude specific valuables by listing their names, seperated by commas.");
             upgradeItems.Add(itemResist);
             UpgradeItem.Base mapZoomBase = new UpgradeItem.Base
             {
