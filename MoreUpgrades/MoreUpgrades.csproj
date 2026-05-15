@@ -102,6 +102,7 @@
     <Compile Include="Patches\EnemyParentPatch.cs" />
     <Compile Include="Patches\EnemyHealthPatch.cs" />
     <Compile Include="Patches\MissionUIPatch.cs" />
+    <Compile Include="Patches\UpgradeStandPatch.cs" />
     <Compile Include="Patches\ValuableObjectPatch.cs" />
     <Compile Include="Patches\PhysGrabObjectPatch.cs" />
     <Compile Include="Patches\ShopManagerPatch.cs" />
