@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.7.2";
+        private const string modVer = "1.7.3";
 
         internal static Plugin instance;
         public ManualLogSource logger;
@@ -504,8 +504,8 @@ namespace MoreUpgrades
             UpgradeItem.Base mapCosmeticsTrackerBase = new UpgradeItem.Base
             {
                 name = "Map Cosmetics Tracker",
-                minPrice = 200000,
-                maxPrice = 300000,
+                minPrice = 45000,
+                maxPrice = 60000,
                 maxPurchaseAmount = 1,
                 priceIncreaseScaling = 0
             };
