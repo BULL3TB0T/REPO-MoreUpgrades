@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.7.1";
+        private const string modVer = "1.7.2";
 
         internal static Plugin instance;
         public ManualLogSource logger;
@@ -233,10 +233,10 @@ namespace MoreUpgrades
             UpgradeItem.Base sprintUsageBase = new UpgradeItem.Base
             {
                 name = "Sprint Usage",
-                maxAmount = 10,
-                maxAmountInShop = 2,
                 minPrice = 9000,
-                maxPrice = 14000
+                maxPrice = 14000,
+                maxAmount = 10,
+                maxAmountInShop = 2
             };
             UpgradeItem sprintUsage = null;
             void UpdateSprintUsage(PlayerAvatar playerAvatar, int level)
@@ -392,6 +392,7 @@ namespace MoreUpgrades
                 name = "Map Player Tracker",
                 minPrice = 30000,
                 maxPrice = 40000,
+                minPlayerCount = 2,
                 maxPurchaseAmount = 1,
                 priceIncreaseScaling = 0
             };
@@ -433,10 +434,10 @@ namespace MoreUpgrades
             UpgradeItem.Base mapZoomBase = new UpgradeItem.Base
             {
                 name = "Map Zoom",
-                maxAmount = 2,
-                maxAmountInShop = 1,
                 minPrice = 20000,
                 maxPrice = 35000,
+                maxAmount = 2,
+                maxAmountInShop = 1,
                 maxPurchaseAmount = 2
             };
             UpgradeItem mapZoom = null;
@@ -455,10 +456,10 @@ namespace MoreUpgrades
             UpgradeItem autoScan = new UpgradeItem(new UpgradeItem.Base
             {
                 name = "Autoscan",
-                maxAmount = 3,
-                maxAmountInShop = 1,
                 minPrice = 45000,
                 maxPrice = 50000,
+                maxAmount = 3,
+                maxAmountInShop = 1,
                 maxPurchaseAmount = 3
             });
             autoScan.AddConfig("Silent Scanning", false,
@@ -469,10 +470,10 @@ namespace MoreUpgrades
             UpgradeItem itemValue = new UpgradeItem(new UpgradeItem.Base
             {
                 name = "Item Value",
-                maxAmount = 10,
-                maxAmountInShop = 2,
                 minPrice = 75000,
-                maxPrice = 82500
+                maxPrice = 82500,
+                maxAmount = 10,
+                maxAmountInShop = 2
             });
             itemValue.AddConfig("Scaling Factor", 0.05f,
                 "This variable is based on the host!\nFormula: itemValue * (1 + upgradeLevel * scalingFactor)");
@@ -480,10 +481,10 @@ namespace MoreUpgrades
             UpgradeItem.Base extraLifeBase = new UpgradeItem.Base
             {
                 name = "Extra Life",
-                maxAmount = 10,
-                maxAmountInShop = 2,
                 minPrice = 150000,
-                maxPrice = 225000
+                maxPrice = 225000,
+                maxAmount = 10,
+                maxAmountInShop = 2
             };
             Keybind reviveKeybind = Keybinds.Bind("Revive", "<Keyboard>/r");
             extraLifeBase.onUpdate += delegate

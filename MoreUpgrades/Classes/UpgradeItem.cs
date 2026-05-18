@@ -12,10 +12,11 @@ namespace MoreUpgrades.Classes
         internal class Base
         {
             public string name = null;
-            public int maxAmount = 1;
-            public int maxAmountInShop = 1;
             public float minPrice = 1000;
             public float maxPrice = 1000;
+            public int maxAmount = 1;
+            public int maxAmountInShop = 1;
+            public int minPlayerCount = 1;
             public int maxPurchaseAmount = 0;
             public float priceIncreaseScaling = -1f;
             public Action<PlayerAvatar, int> onStart;
@@ -126,22 +127,24 @@ namespace MoreUpgrades.Classes
         private void SetupConfig()
         {
             configEntries = new Dictionary<string, ConfigEntryBase>();
-            AddConfig("Enabled", true, "Whether the upgrade item can be spawned to the shop.");
+            AddConfig("Enabled", true, "Whether the upgrade item can appear in the shop.");
+            AddConfig("Minimum Price", upgradeBase.minPrice, "The minimum cost to purchase the upgrade item.");
+            AddConfig("Maximum Price", upgradeBase.maxPrice, "The maximum cost to purchase the upgrade item.");
             AddConfig("Max Amount", upgradeBase.maxAmount, 
                 "The maximum number of times the upgrade item can appear in the truck.");
             AddConfig("Max Amount In Shop", upgradeBase.maxAmountInShop,
                 "The maximum number of times the upgrade item can appear in the shop.");
-            AddConfig("Minimum Price", upgradeBase.minPrice, "The minimum cost to purchase the upgrade item.");
-            AddConfig("Maximum Price", upgradeBase.maxPrice, "The maximum cost to purchase the upgrade item.");
+            AddConfig("Min Player Count", upgradeBase.minPlayerCount,
+                "The minimum number of players required for the upgrade item to appear in the shop.");
+            AddConfig("Max Purchase Amount", upgradeBase.maxPurchaseAmount,
+                "The maximum number of times the upgrade item can be purchased before it is no longer available in the shop." +
+                "\nSet to 0 to disable the limit.");
             AddConfig("Price Increase Scaling", upgradeBase.priceIncreaseScaling,
                 "The scale of the price increase based on the total number of upgrade item purchased." +
                 "\nSet this value under 0 to use the default scaling.");
             AddConfig("Price Multiplier", isRepoLibImported ? -1f : 1f,
                "The multiplier of the price." +
                "\nSet this value under 0 to use the default multiplier.");
-            AddConfig("Max Purchase Amount", upgradeBase.maxPurchaseAmount,
-                "The maximum number of times the upgrade item can be purchased before it is no longer available in the shop." +
-                "\nSet to 0 to disable the limit.");
             AddConfig("Allow Team Upgrades", false,
                 "Whether the upgrade item applies to the entire team instead of just one player.");
             AddConfig("Sync Host Upgrades", false, "Whether the host should sync the item upgrade for the entire team.");
@@ -162,14 +165,15 @@ namespace MoreUpgrades.Classes
             string assetName = $"Modded Item Upgrade Player {upgradeBase.name}";
             item.name = assetName;
             item.itemName = $"{upgradeBase.name} Upgrade";
-            item.maxAmount = GetConfig<int>("Max Amount");
-            item.maxAmountInShop = GetConfig<int>("Max Amount In Shop");
-            item.maxPurchaseAmount = GetConfig<int>("Max Purchase Amount");
-            item.maxPurchase = item.maxPurchaseAmount > 0;
             Value value = ScriptableObject.CreateInstance<Value>();
             value.valueMin = GetConfig<float>("Minimum Price");
             value.valueMax = GetConfig<float>("Maximum Price");
             item.value = value;
+            item.maxAmount = GetConfig<int>("Max Amount");
+            item.maxAmountInShop = GetConfig<int>("Max Amount In Shop");
+            item.minPlayerCount = GetConfig<int>("Min Player Count");
+            item.maxPurchaseAmount = GetConfig<int>("Max Purchase Amount");
+            item.maxPurchase = item.maxPurchaseAmount > 0;
             GameObject prefab = Plugin.instance.assetBundle.LoadAsset<GameObject>(upgradeBase.name);
             prefab.name = assetName;
             REPOLibItemUpgrade itemUpgrade = prefab.GetComponent<REPOLibItemUpgrade>();
@@ -187,21 +191,23 @@ namespace MoreUpgrades.Classes
             upgradeBase = new Base
             {
                 name = playerUpgrade.UpgradeId,
+                minPrice = item.value.valueMin,
+                maxPrice = item.value.valueMax,
                 maxAmount = item.maxAmount,
                 maxAmountInShop = item.maxAmountInShop,
-                maxPurchaseAmount = item.maxPurchaseAmount,
-                minPrice = item.value.valueMin,
-                maxPrice = item.value.valueMax
+                minPlayerCount = item.minPlayerCount,
+                maxPurchaseAmount = item.maxPurchaseAmount
             };
             sectionName = $"{upgradeBase.name} ({Compatibility.REPOLib.modGUID})";
             appliedPlayerDictionary = new Dictionary<string, int>();
             SetupConfig();
-            item.maxAmount = GetConfig<int>("Max Amount");
-            item.maxAmountInShop = GetConfig<int>("Max Amount In Shop");
-            item.maxPurchaseAmount = GetConfig<int>("Max Purchase Amount");
-            item.maxPurchase = item.maxPurchaseAmount > 0;
             item.value.valueMin = GetConfig<float>("Minimum Price");
             item.value.valueMax = GetConfig<float>("Maximum Price");
+            item.maxAmount = GetConfig<int>("Max Amount");
+            item.maxAmountInShop = GetConfig<int>("Max Amount In Shop");
+            item.minPlayerCount = GetConfig<int>("Min Player Count");
+            item.maxPurchaseAmount = GetConfig<int>("Max Purchase Amount");
+            item.maxPurchase = item.maxPurchaseAmount > 0;
             this.playerUpgrade = playerUpgrade;
         }
     }
