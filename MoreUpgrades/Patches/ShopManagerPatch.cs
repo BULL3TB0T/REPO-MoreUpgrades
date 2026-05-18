@@ -11,8 +11,7 @@ namespace MoreUpgrades.Patches
     {
         [HarmonyPatch("GetAllItemsFromStatsManager")]
         [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> GetAllItemsFromStatsManagerTranspiler(
-            IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<CodeInstruction> GetAllItemsFromStatsManagerTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
             matcher.MatchForward(false, 

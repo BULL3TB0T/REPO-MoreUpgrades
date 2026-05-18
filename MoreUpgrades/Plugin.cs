@@ -21,7 +21,7 @@ namespace MoreUpgrades
     {
         private const string modGUID = "bulletbot.moreupgrades";
         private const string modName = "MoreUpgrades";
-        private const string modVer = "1.7.0";
+        private const string modVer = "1.7.1";
 
         internal static Plugin instance;
         public ManualLogSource logger;
@@ -500,6 +500,74 @@ namespace MoreUpgrades
             extraLife.AddConfig("Multiplayer Invincibility Timer", 0f,
                 "This variable is based on the host! After reviving, you will be given a short invincibility period.");
             upgradeItems.Add(extraLife);
+            UpgradeItem.Base mapCosmeticsTrackerBase = new UpgradeItem.Base
+            {
+                name = "Map Cosmetics Tracker",
+                minPrice = 200000,
+                maxPrice = 300000,
+                maxPurchaseAmount = 1,
+                priceIncreaseScaling = 0
+            };
+            UpgradeItem mapCosmeticsTracker = new UpgradeItem(mapCosmeticsTrackerBase);
+            mapCosmeticsTrackerBase.onVariablesStart += delegate
+            {
+                mapCosmeticsTracker.AddVariable("Blink Timer", 0f);
+                mapCosmeticsTracker.AddVariable("Cosmetic LED Infos", new List<CosmeticLEDInfo>());
+            };
+            mapCosmeticsTrackerBase.onUpdate += delegate
+            {
+                PlayerAvatar playerAvatar = PlayerController.instance.playerAvatarScript;
+                if (playerAvatar == null)
+                    return;
+                List<CosmeticLEDInfo> cosmeticLEDInfos = mapCosmeticsTracker.GetVariable<List<CosmeticLEDInfo>>("Cosmetic LED Infos");
+                bool shouldShow = mapCosmeticsTracker.playerUpgrade.GetLevel(playerAvatar) > 0 && SemiFunc.RunIsLevel();
+                foreach (CosmeticLEDInfo cosmeticLEDInfo in cosmeticLEDInfos)
+                    cosmeticLEDInfo.ledObject.SetActive(shouldShow);
+                if (!shouldShow)
+                    return;
+                bool mapActive = (bool)AccessTools.Field(typeof(MapToolController), "Active").GetValue(MapToolController.instance);
+                if (!mapActive)
+                {
+                    float blinkTimer = mapCosmeticsTracker.GetVariable<float>("Blink Timer");
+                    if (blinkTimer == 0f)
+                        return;
+                    mapCosmeticsTracker.SetVariable("Blink Timer", 0f);
+                    foreach (CosmeticLEDInfo cosmeticLEDInfo in cosmeticLEDInfos)
+                        cosmeticLEDInfo.ledMaterial.SetColor("_EmissionColor", Color.black);
+                    return;
+                }
+                float newBlinkTimer = 0;
+                if (cosmeticLEDInfos.Any(x => x.cosmeticWorldObject != null || x.isExtracted || x.isDestroyed))
+                {
+                    newBlinkTimer = mapCosmeticsTracker.GetVariable<float>("Blink Timer") + Time.deltaTime;
+                    mapCosmeticsTracker.SetVariable("Blink Timer", newBlinkTimer);
+                }
+                Vector3 playerPosition = playerAvatar.transform.position;
+                foreach (CosmeticLEDInfo cosmeticLEDInfo in cosmeticLEDInfos)
+                {
+                    Color color = Color.black;
+                    if (cosmeticLEDInfo.isExtracted)
+                        color = cosmeticLEDInfo.color;
+                    else if (cosmeticLEDInfo.isDestroyed)
+                    {
+                        float redPercent = 0.35f;
+                        float blinkValue = (Mathf.Sin(newBlinkTimer * 1.25f * Mathf.PI * 2f) + 1f) * 0.5f;
+                        blinkValue = Mathf.Pow(blinkValue, 1f / redPercent);
+                        color = cosmeticLEDInfo.color * (1f - blinkValue) + Color.red * blinkValue;
+                    }
+                    else if (cosmeticLEDInfo.cosmeticWorldObject != null)
+                    {
+                        float distance = Vector3.Distance(playerPosition, cosmeticLEDInfo.cosmeticWorldObject.transform.position);
+                        float distance01 = Mathf.InverseLerp(30f, 5f, distance);
+                        float blinkSpeed = Mathf.Lerp(1f, 2.75f, distance01);
+                        float blinkValue = (Mathf.Sin(newBlinkTimer * blinkSpeed * Mathf.PI * 2f) + 1f) * 0.5f;
+                        blinkValue = Mathf.SmoothStep(0f, 1f, blinkValue);
+                        color = cosmeticLEDInfo.color * blinkValue;
+                    }
+                    cosmeticLEDInfo.ledMaterial.SetColor("_EmissionColor", color);
+                }
+            };
+            upgradeItems.Add(mapCosmeticsTracker);
             SceneManager.activeSceneChanged += delegate
             {
                 if (RunManager.instance == null || RunManager.instance.levelCurrent == RunManager.instance.levelMainMenu 

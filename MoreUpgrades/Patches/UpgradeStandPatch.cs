@@ -11,8 +11,7 @@ namespace MoreUpgrades.Patches
     {
         [HarmonyPatch("GetWeightedUpgradeExcluding")]
         [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> GetWeightedUpgradeExcludingTranspiler(
-            IEnumerable<CodeInstruction> instructions)  
+        static IEnumerable<CodeInstruction> GetWeightedUpgradeExcludingTranspiler(IEnumerable<CodeInstruction> instructions)  
         {
             CodeMatcher matcher = new CodeMatcher(instructions);
             matcher.MatchForward(false, 

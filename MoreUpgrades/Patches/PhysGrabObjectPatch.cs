@@ -47,6 +47,29 @@ namespace MoreUpgrades.Patches
                 currentValuables.Remove(valuableObject);
         }
 
+        [HarmonyPatch("DestroyPhysGrabObject")]
+        [HarmonyPostfix]
+        static void DestroyPhysGrabObject(PhysGrabObject __instance)
+        {
+            if (MoreUpgradesManager.instance == null)
+                return;
+            CosmeticWorldObject cosmeticWorldObject = __instance.GetComponent<CosmeticWorldObject>();
+            if (cosmeticWorldObject == null)
+                return;
+            UpgradeItem upgradeItem = Plugin.instance.upgradeItems.FirstOrDefault(x => x.upgradeBase.name == "Map Cosmetics Tracker");
+            if (upgradeItem == null)
+                return;
+            List<CosmeticLEDInfo> cosmeticLEDInfos = upgradeItem.GetVariable<List<CosmeticLEDInfo>>("Cosmetic LED Infos");
+            foreach (CosmeticLEDInfo cosmeticLEDInfo in cosmeticLEDInfos)
+            {
+                if (cosmeticLEDInfo.cosmeticWorldObject == cosmeticWorldObject)
+                {
+                    cosmeticLEDInfo.isDestroyed = true;
+                    break;
+                }
+            }
+        }
+
         [HarmonyPatch("GrabStarted")]
         [HarmonyPostfix]
         static void GrabStarted(PhysGrabObject __instance, bool ___grabbedLocal, bool ___isValuable)

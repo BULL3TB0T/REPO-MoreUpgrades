@@ -87,6 +87,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\CosmeticLEDInfo.cs" />
     <Compile Include="Classes\MapInfo.cs" />
     <Compile Include="Classes\MoreUpgradesAPI.cs" />
     <Compile Include="Classes\MoreUpgradesManager.cs" />
@@ -95,8 +96,10 @@
     <Compile Include="Compatibility\REPOLib.cs" />
     <Compile Include="Patches\ItemAttributesPatch.cs" />
     <Compile Include="Patches\MapPatch.cs" />
+    <Compile Include="Patches\CosmeticWorldObjectPatch.cs" />
     <Compile Include="Patches\PhysGrabObjectImpactDetectorPatch.cs" />
     <Compile Include="Patches\PhysGrabberPatch.cs" />
+    <Compile Include="Patches\MapToolControllerPatch.cs" />
     <Compile Include="Patches\PlayerAvatarPatch.cs" />
     <Compile Include="Patches\EnemySlowMouthPatch.cs" />
     <Compile Include="Patches\EnemyParentPatch.cs" />
